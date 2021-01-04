@@ -1,0 +1,25 @@
+#app-container {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    grid-template-areas:
+        "input main"
+        "side main";
+    grid-template-columns: 1fr 2fr;
+    grid-template-rows: 1fr 2fr;
+}
+
+#input-container {
+    grid-area: input;
+    background-color: green;
+}
+
+#mainpanel-container {
+    grid-area: main;
+    background-color: blue;
+}
+
+#sidepanel-container {
+    grid-area: side;
+    background-color: red;
+}
