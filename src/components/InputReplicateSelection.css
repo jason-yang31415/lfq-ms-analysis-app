@@ -1,0 +1,20 @@
+#input-replicate-modal {
+    display: grid;
+    grid-template-areas:
+        "head head head"
+        "left mid right"
+        "foot foot foot";
+    grid-template-rows: auto 1fr auto;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 1rem;
+}
+
+#input-replicate-modal-head {
+    grid-area: head;
+}
+
+#input-replicate-modal-foot {
+    grid-area: foot;
+    margin-top: 1rem;
+    text-align: center;
+}

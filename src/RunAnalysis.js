@@ -1,6 +1,8 @@
 import getCurrentExperiment from "./analysis";
 import { readMaxQuant } from "./analysis/DataPreparation";
 import currentExperiment from "./analysis";
+import { ACTIONS, createAction } from "./store/actions";
+import { dispatch } from "d3";
 
 /**
  * Begin analysis after file is uploaded by user.
@@ -11,11 +13,19 @@ import currentExperiment from "./analysis";
  */
 export function onDataUpload(file) {
     return (dispatch) => {
-        const fileUrl = URL.createObjectURL(file);
-        readMaxQuant(fileUrl)
-            .then(() => {
-                URL.revokeObjectURL(fileUrl);
-            })
-            .then(() => {});
+        readMaxQuant(file).then(() => {
+            const experiment = currentExperiment();
+            experiment.removeContaminants();
+            experiment.logTransform();
+            experiment.removeAllNaN();
+
+            dispatch(
+                createAction(ACTIONS.SET_INPUT_SAMPLES, experiment.samples)
+            );
+        });
     };
+}
+
+export function onReplicatesSelect() {
+    return (dispatch) => {};
 }
