@@ -1,4 +1,5 @@
 import { DataFrame } from "data-forge";
+import random from "random";
 
 class MSExperiment {
     /**
@@ -81,6 +82,33 @@ class MSExperiment {
         this.replicates.clear();
         for (const [condition, samples] of Object.entries(replicates))
             this.replicates.set(condition, samples);
+    }
+
+    /**
+     * Modifies `data` to replace NA's (intensity of 0) with imputed values.
+     * Imputed values are drawn from a uniform distribution of log2 intensities
+     * ranging from -3 * sigma to -2 * sigma among non-NA log2 intensity
+     * values within the same sample.
+     */
+    imputeMissingValues() {
+        console.log("imputing missing values");
+        for (const sample of this.samples) {
+            const series = this.data
+                .getSeries(`LFQ intensity ${sample}`)
+                .where((value) => !Number.isNaN(value))
+                .bake();
+            const mean = series.average();
+            const stdev = series.std();
+
+            this.data = this.data
+                .transformSeries({
+                    [`LFQ intensity ${sample}`]: (value) =>
+                        Number.isNaN(value)
+                            ? random.uniform(mean - 3 * stdev, mean - 2 * stdev)
+                            : value,
+                })
+                .bake();
+        }
     }
 }
 

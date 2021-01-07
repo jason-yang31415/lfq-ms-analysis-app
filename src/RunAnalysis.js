@@ -19,6 +19,8 @@ export function onDataUpload(file) {
             experiment.logTransform();
             experiment.removeAllNaN();
 
+            experiment.imputeMissingValues();
+
             dispatch(
                 createAction(ACTIONS.SET_INPUT_SAMPLES, experiment.samples)
             );
@@ -27,5 +29,6 @@ export function onDataUpload(file) {
 }
 
 export function onReplicatesSelect() {
-    return (dispatch) => {};
+    return (dispatch) => {
+    };
 }
