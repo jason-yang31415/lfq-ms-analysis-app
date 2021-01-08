@@ -31,6 +31,7 @@ export function onDataUpload(file) {
 export function onReplicatesSelect(conditions) {
     return (dispatch) => {
         const experiment = currentExperiment();
+        if (!experiment) return;
         experiment.setReplicates(conditions);
         dispatch(
             createAction(ACTIONS.SET_INPUT_CONDITIONS, Object.keys(conditions))
