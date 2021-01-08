@@ -7,7 +7,7 @@ import { onReplicatesSelect } from "../RunAnalysis";
 
 Modal.setAppElement("#root");
 
-function InputReplicateSelection({ samples }) {
+function InputReplicateSelection({ samples, onReplicatesSelect }) {
     const [replicatesModalOpen, setReplicatesModalOpen] = React.useState(false);
     const [selectedReplicates, setSelectedReplicates] = React.useState([]);
     const [conditionName, setConditionName] = React.useState("");
@@ -24,6 +24,7 @@ function InputReplicateSelection({ samples }) {
     };
 
     const onOKClick = () => {
+        onReplicatesSelect(conditions);
         setReplicatesModalOpen(false);
     };
 
@@ -72,7 +73,7 @@ function InputReplicateSelection({ samples }) {
                 <div>
                     {Object.entries(conditions).map(
                         ([condition, replicates]) => (
-                            <p>
+                            <p key={condition}>
                                 {condition}: {replicates.join(", ")}
                             </p>
                         )
@@ -95,8 +96,8 @@ export default connect(
     },
     (dispatch) => {
         return {
-            onOKClick: () => {
-                dispatch(onReplicatesSelect());
+            onReplicatesSelect: (conditions) => {
+                dispatch(onReplicatesSelect(conditions));
             },
         };
     }

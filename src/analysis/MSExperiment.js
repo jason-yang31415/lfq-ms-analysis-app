@@ -12,6 +12,9 @@ class MSExperiment {
         this.rawData = data;
         this.samples = samples;
 
+        /** @type {Map<string, DataFrame} */
+        this.snapshots = new Map();
+
         /** @type {Map<string, string[]>} */
         this.replicates = new Map();
 
@@ -20,6 +23,12 @@ class MSExperiment {
         this.removeAllNaN = this.removeAllNaN.bind(this);
         this.setReplicates = this.setReplicates.bind(this);
     }
+
+    static SNAPSHOT_KEYS = {
+        REMOVE_CONTAMINANTS: "REMOVE_CONTAMINANTS",
+        LOG_TRANSFORM: "LOG_TRANSFORM",
+        IMPUTE_MISSING_VALUES: "IMPUTE_MISSING_VALUES",
+    };
 
     /**
      * Modifies `data` to remove entries with True for "Potential contaminant"
@@ -37,6 +46,11 @@ class MSExperiment {
                 ...this.samples.map((sample) => `LFQ intensity ${sample}`),
             ])
             .bake();
+
+        this.snapshots.set(
+            MSExperiment.SNAPSHOT_KEYS.REMOVE_CONTAMINANTS,
+            this.data
+        );
     }
 
     /**
@@ -53,6 +67,8 @@ class MSExperiment {
                 })
                 .bake();
         }
+
+        this.snapshots.set(MSExperiment.SNAPSHOT_KEYS.LOG_TRANSFORM, this.data);
     }
 
     /**
@@ -104,11 +120,19 @@ class MSExperiment {
                 .transformSeries({
                     [`LFQ intensity ${sample}`]: (value) =>
                         Number.isNaN(value)
-                            ? random.uniform(mean - 3 * stdev, mean - 2 * stdev)
+                            ? random.uniform(
+                                  mean - 3 * stdev,
+                                  mean - 2 * stdev
+                              )()
                             : value,
                 })
                 .bake();
         }
+
+        this.snapshots.set(
+            MSExperiment.SNAPSHOT_KEYS.IMPUTE_MISSING_VALUES,
+            this.data
+        );
     }
 }
 

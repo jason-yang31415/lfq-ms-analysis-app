@@ -1,0 +1,17 @@
+.main-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.main-figure-options {
+    flex: 0 0 10rem;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.main-plot {
+    flex-basis: auto;
+    flex-grow: 1;
+}
