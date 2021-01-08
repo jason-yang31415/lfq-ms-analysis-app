@@ -20,7 +20,7 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - uses: actions/checkout@
+    - uses: actions/checkout@v2
       with:
         persist-credentials: false
     - name: Use Node.js ${{ matrix.node-version }}
