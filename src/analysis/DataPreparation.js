@@ -5,7 +5,7 @@ import { setCurrentExperiment } from "./CurrentExperiment";
 
 /**
  * Parse MaxQuant proteinGroups.txt output and set current MSExperiment
- * @param {string} url url to MaxQuant proteinGroups.txt file
+ * @param {Blob} file file (or blob) containing MaxQuant data
  */
 export async function readMaxQuant(file) {
     // read file blob as string

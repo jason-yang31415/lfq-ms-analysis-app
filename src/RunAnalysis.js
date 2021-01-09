@@ -1,40 +1,45 @@
-import getCurrentExperiment from "./analysis";
-import { readMaxQuant } from "./analysis/DataPreparation";
-import currentExperiment from "./analysis";
+import worker from "./AnalysisWorker";
+import { transfer } from "comlink";
 import { ACTIONS, createAction } from "./store/actions";
-import { dispatch } from "d3";
 
 /**
- * Begin analysis after file is uploaded by user.
- *  - Parse data as MaxQuant output
- *  - Remove potential contaminants and reverse sequences
- *  - Log transform LFQ intensities
- * @param {File} file uploaded data file
+ * This file interfaces between UI and analysis. UI changes are handled on the
+ * main thread (this file) while analysis is handled in a worker (see
+ * worker.js); each function calls the equivalent function in the worker, via
+ * comlink proxy, to handle the analysis aspect off of the main thread.
  */
+
 export function onDataUpload(file) {
     return (dispatch) => {
-        readMaxQuant(file).then(() => {
-            const experiment = currentExperiment();
-            experiment.removeContaminants();
-            experiment.logTransform();
-            experiment.removeAllNaN();
-
-            experiment.imputeMissingValues();
-
-            dispatch(
-                createAction(ACTIONS.SET_INPUT_SAMPLES, experiment.samples)
-            );
-        });
+        new Response(file)
+            // wrap file blob in response to read data as array buffer
+            .arrayBuffer()
+            // transfer array buffer to worker for processing and analysis
+            .then((ab) => {
+                return worker.onDataUpload(transfer(ab, [ab]));
+            })
+            // retrieve sample names
+            .then(() => {
+                return worker.getSamples();
+            })
+            // update UI with sample names
+            .then((samples) => {
+                dispatch(createAction(ACTIONS.SET_INPUT_SAMPLES, samples));
+            });
     };
 }
 
 export function onReplicatesSelect(conditions) {
     return (dispatch) => {
-        const experiment = currentExperiment();
-        if (!experiment) return;
-        experiment.setReplicates(conditions);
-        dispatch(
-            createAction(ACTIONS.SET_INPUT_CONDITIONS, Object.keys(conditions))
-        );
+        // transfer conditions object to worker for processing
+        worker.onReplicatesSelect(conditions).then(() => {
+            // update UI with condition names
+            dispatch(
+                createAction(
+                    ACTIONS.SET_INPUT_CONDITIONS,
+                    Object.keys(conditions)
+                )
+            );
+        });
     };
 }

@@ -15,8 +15,8 @@ function MainPanelContainer({ id, samples }) {
         },
     });
 
-    const onShowPlotClick = () => {
-        setPlot(makePlotlyDataLayout(figureOptions));
+    const onShowPlotClick = async () => {
+        setPlot(await makePlotlyDataLayout(figureOptions));
     };
 
     return (
