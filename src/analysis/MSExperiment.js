@@ -27,6 +27,7 @@ class MSExperiment {
     static SNAPSHOT_KEYS = {
         REMOVE_CONTAMINANTS: "REMOVE_CONTAMINANTS",
         LOG_TRANSFORM: "LOG_TRANSFORM",
+        MEDIAN_NORMALIZATION: "MEDIAN_NORMALIZATION",
         IMPUTE_MISSING_VALUES: "IMPUTE_MISSING_VALUES",
     };
 
@@ -86,6 +87,41 @@ class MSExperiment {
                     )
             )
             .bake();
+    }
+
+    /**
+     * Modifies `data` such that each sample is scaled to have the same median
+     * value, equal to the highest median pre-scaling.
+     */
+    normalizeMedians() {
+        console.log("normalizing medians");
+        const maxMedian = Math.max.apply(
+            null,
+            this.samples.map((sample) =>
+                this.data
+                    .getSeries(`LFQ intensity ${sample}`)
+                    .where((value) => !Number.isNaN(value))
+                    .median()
+            )
+        );
+
+        for (const sample of this.samples) {
+            const median = this.data
+                .getSeries(`LFQ intensity ${sample}`)
+                .where((value) => !Number.isNaN(value))
+                .median();
+            this.data = this.data
+                .transformSeries({
+                    [`LFQ intensity ${sample}`]: (value) =>
+                        (value * maxMedian) / median,
+                })
+                .bake();
+        }
+
+        this.snapshots.set(
+            MSExperiment.SNAPSHOT_KEYS.MEDIAN_NORMALIZATION,
+            this.data
+        );
     }
 
     /**

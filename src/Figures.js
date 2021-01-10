@@ -41,7 +41,7 @@ async function makePrePostImputationViolin({ samples, conditions }) {
                     worker
                         .getData(
                             `LFQ intensity ${sample}`,
-                            MSExperiment.SNAPSHOT_KEYS.LOG_TRANSFORM
+                            MSExperiment.SNAPSHOT_KEYS.MEDIAN_NORMALIZATION
                         )
                         .then((data) =>
                             makeViolinTrace({
@@ -83,7 +83,8 @@ async function makePrePostImputationViolin({ samples, conditions }) {
                             .map((sample) =>
                                 worker.getData(
                                     `LFQ intensity ${sample}`,
-                                    MSExperiment.SNAPSHOT_KEYS.LOG_TRANSFORM
+                                    MSExperiment.SNAPSHOT_KEYS
+                                        .MEDIAN_NORMALIZATION
                                 )
                             )
                     )
@@ -150,7 +151,7 @@ async function makePrePostImputationBoxplot({ samples, conditions }) {
                     worker
                         .getData(
                             `LFQ intensity ${sample}`,
-                            MSExperiment.SNAPSHOT_KEYS.LOG_TRANSFORM
+                            MSExperiment.SNAPSHOT_KEYS.MEDIAN_NORMALIZATION
                         )
                         .then((data) =>
                             makeBoxplotTrace({
@@ -190,7 +191,8 @@ async function makePrePostImputationBoxplot({ samples, conditions }) {
                             .map((sample) =>
                                 worker.getData(
                                     `LFQ intensity ${sample}`,
-                                    MSExperiment.SNAPSHOT_KEYS.LOG_TRANSFORM
+                                    MSExperiment.SNAPSHOT_KEYS
+                                        .MEDIAN_NORMALIZATION
                                 )
                             )
                     )

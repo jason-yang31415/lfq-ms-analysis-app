@@ -17,6 +17,7 @@ function onDataUpload(arraybuffer) {
         experiment.removeContaminants();
         experiment.logTransform();
         experiment.removeAllNaN();
+        experiment.normalizeMedians();
         experiment.imputeMissingValues();
     });
 }
