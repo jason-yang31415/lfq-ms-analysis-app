@@ -21,6 +21,10 @@ function inputReducer(state, action) {
             return Object.assign({}, state, {
                 conditions: action.data,
             });
+        case ACTIONS.SET_INPUT_COMPARISONS:
+            return Object.assign({}, state, {
+                comparisons: action.data,
+            });
     }
     return state;
 }
@@ -30,6 +34,7 @@ function rootReducer(state = initialState, action) {
     switch (action.type) {
         case ACTIONS.SET_INPUT_SAMPLES:
         case ACTIONS.SET_INPUT_CONDITIONS:
+        case ACTIONS.SET_INPUT_COMPARISONS:
             cpy.input = inputReducer(state.input, action);
             break;
     }

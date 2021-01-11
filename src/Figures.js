@@ -1,10 +1,10 @@
 import worker from "./AnalysisWorker";
 import MSExperiment from "./analysis/MSExperiment";
-import FigureSampleConditionSelector from "./components/FigureSampleConditionSelector";
 
 export const FIGURES = {
     PRE_POST_IMPUTATION_VIOLIN: "PRE_POST_IMPUTATION_VIOLIN",
     PRE_POST_IMPUTATION_BOXPLOT: "PRE_POST_IMPUTATION_BOXPLOT",
+    VOLCANO: "VOLCANO",
 };
 
 export async function makePlotlyDataLayout(options) {
@@ -17,6 +17,9 @@ export async function makePlotlyDataLayout(options) {
             break;
         case FIGURES.PRE_POST_IMPUTATION_BOXPLOT:
             ret = await makePrePostImputationBoxplot(options);
+            break;
+        case FIGURES.VOLCANO:
+            ret = await makeVolcanoPlot(options);
             break;
     }
     ret.layout.autosize = true;
@@ -243,4 +246,28 @@ async function makePrePostImputationBoxplot({ samples, conditions }) {
         boxgroupgap: 0,
     });
     return ret;
+}
+
+async function makeVolcanoPlot({ comparisons }) {
+    if (!comparisons) return { data: [], layout: {} };
+    return {
+        data: [
+            await Promise.all([
+                worker.getComparisonData(comparisons, "log FC"),
+                worker.getComparisonData(comparisons, "p value"),
+                worker.getComparisonData(comparisons, "gene"),
+            ]).then(([logfc, pvalues, genes]) => {
+                return {
+                    type: "scattergl",
+                    mode: "markers",
+                    x: logfc,
+                    y: pvalues.map((p) => -1 * Math.log10(p)),
+                    hovertext: genes,
+                };
+            }),
+        ],
+        layout: {
+            title: `${comparisons[1]} vs. ${comparisons[0]}`,
+        },
+    };
 }

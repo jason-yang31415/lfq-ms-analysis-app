@@ -34,6 +34,19 @@ function onReplicatesSelect(conditions) {
 }
 
 /**
+ * Continues analysis after user selects comparisons to make.
+ *  - Set experiment comparisons
+ *  - Calculate log2 LFQ intensity difference and perform t-test
+ * @param {Object.<string, string[]>} comparisons
+ */
+function onComparisonsSelect(comparisons) {
+    const experiment = currentExperiment();
+    if (!experiment) return;
+    if (!comparisons) return;
+    experiment.makeComparisons(comparisons);
+}
+
+/**
  * Retrives a column of intensity data as an array.
  * @param {string} column name of column whose intensity data should be
  * retrieved
@@ -46,12 +59,26 @@ function getData(column, key = null) {
     return data.getSeries(column).toArray();
 }
 
+function getComparisonData(comparison, column) {
+    const experiment = currentExperiment();
+    if (!experiment) return;
+    if (!experiment.comparisons.has(comparison[0])) return;
+    if (!experiment.comparisons.get(comparison[0]).has(comparison[1])) return;
+    return experiment.comparisons
+        .get(comparison[0])
+        .get(comparison[1])
+        .getSeries(column)
+        .toArray();
+}
+
 // expose worker thread analysis functions and getters to the main thread via
 // comlink
 expose({
     onDataUpload,
     onReplicatesSelect,
+    onComparisonsSelect,
     getData,
+    getComparisonData,
     getSamples: () => currentExperiment().samples,
     getReplicates: () => currentExperiment().replicates,
 });

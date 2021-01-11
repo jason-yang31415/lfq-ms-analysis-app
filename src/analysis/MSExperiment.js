@@ -1,5 +1,7 @@
-import { DataFrame } from "data-forge";
+import { DataFrame, Series } from "data-forge";
 import random from "random";
+import jstat from "jstat";
+import { ttest } from "./utils";
 
 class MSExperiment {
     /**
@@ -18,6 +20,9 @@ class MSExperiment {
         /** @type {Map<string, string[]>} */
         this.replicates = new Map();
 
+        /** @type {Map<string, Map<string, DataFrame>>} */
+        this.comparisons = new Map();
+
         this.removeContaminants = this.removeContaminants.bind(this);
         this.logTransform = this.logTransform.bind(this);
         this.removeAllNaN = this.removeAllNaN.bind(this);
@@ -31,6 +36,8 @@ class MSExperiment {
         IMPUTE_MISSING_VALUES: "IMPUTE_MISSING_VALUES",
     };
 
+    static COMMON_COLUMNS = ["id", "uniprotID", "gene"];
+
     /**
      * Modifies `data` to remove entries with True for "Potential contaminant"
      * or "Reverse"
@@ -42,8 +49,7 @@ class MSExperiment {
             .where((row) => !row["Potential contaminant"] && !row["Reverse"])
             // keep only "uniprotID" and "LFQ intensity ..." columns
             .subset([
-                "id",
-                "uniprotID",
+                ...MSExperiment.COMMON_COLUMNS,
                 ...this.samples.map((sample) => `LFQ intensity ${sample}`),
             ])
             .bake();
@@ -169,6 +175,65 @@ class MSExperiment {
             MSExperiment.SNAPSHOT_KEYS.IMPUTE_MISSING_VALUES,
             this.data
         );
+    }
+
+    /**
+     * Makes specified comparisons and stores results in `comparisons.
+     * @param {Object.<string, string[]>} comparisons object containing
+     * comparisons to make, with condition A as key and condition B in values
+     * array
+     */
+    makeComparisons(comparisons) {
+        const rowConditionArray = (row, condition) =>
+            this.replicates
+                .get(condition)
+                .map((sample) => row[`LFQ intensity ${sample}`]);
+
+        const allConditions = Array.from(
+            new Set(
+                Object.keys(comparisons).concat(...Object.values(comparisons))
+            )
+        );
+        const conditionMeans = this.data.generateSeries(
+            allConditions.reduce(
+                (obj, condition) =>
+                    Object.assign(obj, {
+                        [`mean ${condition}`]: (row) =>
+                            jstat(rowConditionArray(row, condition)).mean(),
+                    }),
+                {}
+            )
+        );
+
+        for (const [conditionA, value] of Object.entries(comparisons)) {
+            if (!this.comparisons.has(conditionA))
+                this.comparisons.set(conditionA, new Map());
+
+            for (const conditionB of value) {
+                const comparisonData = conditionMeans
+                    .generateSeries({
+                        "log FC": (row) =>
+                            row[`mean ${conditionB}`] -
+                            row[`mean ${conditionA}`],
+                        "p value": (row) =>
+                            ttest(
+                                rowConditionArray(row, conditionB),
+                                rowConditionArray(row, conditionA)
+                            ).p,
+                    })
+                    .subset([
+                        ...MSExperiment.COMMON_COLUMNS,
+                        `mean ${conditionA}`,
+                        `mean ${conditionB}`,
+                        "log FC",
+                        "p value",
+                    ])
+                    .bake();
+                this.comparisons
+                    .get(conditionA)
+                    .set(conditionB, comparisonData);
+            }
+        }
     }
 }
 

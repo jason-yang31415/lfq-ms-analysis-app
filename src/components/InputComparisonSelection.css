@@ -1,0 +1,10 @@
+#input-comparison-modal {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 1rem;
+}
+
+#input-comparison-modal-foot {
+    margin-top: 1rem;
+    text-align: center;
+}

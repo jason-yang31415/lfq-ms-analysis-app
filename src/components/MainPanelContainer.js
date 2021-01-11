@@ -2,12 +2,12 @@ import React from "react";
 import Plot from "react-plotly.js";
 import { connect } from "react-redux";
 import { FIGURES, makePlotlyDataLayout } from "../Figures";
-import FigureSampleConditionSelector from "./FigureSampleConditionSelector";
+import FigureOptions from "./FigureOptions";
 
 import "./MainPanelContainer.css";
 
 function MainPanelContainer({ id, samples }) {
-    const [figureOptions, setFigureOptions] = React.useState();
+    const [figureOptions, setFigureOptions] = React.useState({});
     const [plot, setPlot] = React.useState({
         data: [],
         layout: {
@@ -46,13 +46,15 @@ function MainPanelContainer({ id, samples }) {
                     ]}
                 </select>
 
-                {/* select figure sample */}
-                <FigureSampleConditionSelector
-                    onSampleConditionChange={({ samples, conditions }) =>
+                {/* select figure options */}
+                <FigureOptions
+                    figureType={figureOptions.type}
+                    onOptionsChange={({ samples, conditions, comparisons }) =>
                         setFigureOptions(
                             Object.assign({}, figureOptions, {
                                 samples,
                                 conditions,
+                                comparisons,
                             })
                         )
                     }

@@ -43,3 +43,11 @@ export function onReplicatesSelect(conditions) {
         });
     };
 }
+
+export function onComparisonsSelect(comparisons) {
+    return (dispatch) => {
+        // transfer comparisons object to worker for processing
+        worker.onComparisonsSelect(comparisons);
+        dispatch(createAction(ACTIONS.SET_INPUT_COMPARISONS, comparisons));
+    };
+}

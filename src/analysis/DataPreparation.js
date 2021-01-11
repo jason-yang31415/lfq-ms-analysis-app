@@ -16,6 +16,7 @@ export async function readMaxQuant(file) {
         // add series "uniprotID" with first protein ID
         .generateSeries({
             uniprotID: (row) => row["Protein IDs"].split(";")[0],
+            gene: (row) => row["Gene names"].split(";")[0],
         })
         // cast series "Potential contaminant" and "Reverse" to boolean
         .transformSeries({
