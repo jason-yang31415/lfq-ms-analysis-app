@@ -5,6 +5,7 @@ export const FIGURES = {
     PRE_POST_IMPUTATION_VIOLIN: "PRE_POST_IMPUTATION_VIOLIN",
     PRE_POST_IMPUTATION_BOXPLOT: "PRE_POST_IMPUTATION_BOXPLOT",
     VOLCANO: "VOLCANO",
+    P_VALUE_HISTOGRAM: "P_VALUE_HISTOGRAM",
 };
 
 export async function makePlotlyDataLayout(options) {
@@ -20,6 +21,9 @@ export async function makePlotlyDataLayout(options) {
             break;
         case FIGURES.VOLCANO:
             ret = await makeVolcanoPlot(options);
+            break;
+        case FIGURES.P_VALUE_HISTOGRAM:
+            ret = await makePValueHistogram(options);
             break;
     }
     ret.layout.autosize = true;
@@ -268,6 +272,26 @@ async function makeVolcanoPlot({ comparisons }) {
         ],
         layout: {
             title: `${comparisons[1]} vs. ${comparisons[0]}`,
+        },
+    };
+}
+
+async function makePValueHistogram({ comparisons }) {
+    if (!comparisons) return { data: [], layout: {} };
+    return {
+        data: [
+            {
+                type: "histogram",
+                x: await worker.getComparisonData(comparisons, "p value"),
+                xbins: {
+                    start: 0,
+                    end: 1,
+                    size: 0.025,
+                },
+            },
+        ],
+        layout: {
+            title: `${comparisons[1]} vs. ${comparisons[0]} p values`,
         },
     };
 }

@@ -67,6 +67,7 @@ function FigureOptions({
             );
             break;
         case FIGURES.VOLCANO:
+        case FIGURES.P_VALUE_HISTOGRAM:
             options = (
                 <select
                     multiple
@@ -76,7 +77,7 @@ function FigureOptions({
                         });
                     }}
                 >
-                    {Object.entries(comparisons)
+                    {Object.entries(comparisons || {})
                         .map(([conditionA, value]) =>
                             value.map((conditionB) => (
                                 <option
