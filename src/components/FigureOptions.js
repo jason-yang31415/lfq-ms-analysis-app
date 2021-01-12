@@ -11,7 +11,6 @@ function FigureOptions({
     figureType,
     onOptionsChange,
 }) {
-    console.log(comparisons);
     const [sampleCondition, setSampleCondition] = React.useState("samples");
 
     let options;

@@ -30,7 +30,6 @@ function MainPanelContainer({ id, samples }) {
                                 type: e.target.value,
                             })
                         );
-                        console.log(e.target.value);
                     }}
                     defaultValue="default"
                 >
