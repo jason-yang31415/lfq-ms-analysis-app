@@ -19,6 +19,10 @@ function FigureOptions({
         case FIGURES.PRE_POST_IMPUTATION_BOXPLOT:
             const onFigureTypeChange = (e) => {
                 setSampleCondition(e.currentTarget.value);
+                onOptionsChange({
+                    samples: undefined,
+                    conditions: undefined,
+                });
             };
 
             options = (

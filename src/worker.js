@@ -71,6 +71,18 @@ function getComparisonData(comparison, column) {
         .toArray();
 }
 
+function getComparisonsTable(comparison) {
+    const experiment = currentExperiment();
+    if (!experiment) return;
+    if (!comparison) return;
+    if (!experiment.comparisons.has(comparison[0])) return;
+    if (!experiment.comparisons.get(comparison[0]).has(comparison[1])) return;
+    return experiment.comparisons
+        .get(comparison[0])
+        .get(comparison[1])
+        .toArray();
+}
+
 // expose worker thread analysis functions and getters to the main thread via
 // comlink
 expose({
@@ -79,6 +91,7 @@ expose({
     onComparisonsSelect,
     getData,
     getComparisonData,
+    getComparisonsTable,
     getSamples: () => currentExperiment().samples,
     getReplicates: () => currentExperiment().replicates,
 });
