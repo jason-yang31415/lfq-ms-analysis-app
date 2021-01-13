@@ -26,3 +26,28 @@ export function ttest(arr1, arr2) {
     const p = 2 * jstat.studentt.cdf(-Math.abs(t), df);
     return { t, p, df };
 }
+
+/**
+ * Adjust p values using Benjamini-Hochberg method (FDR)
+ * @param {number[]} pvalues array containing p values
+ */
+export function pAdjust(pvalues) {
+    // enumerate indices for original order, then sort by p value
+    const entries = pvalues
+        .map((p, index) => {
+            return { index, p };
+        })
+        .sort((a, b) => a.p - b.p);
+    // calculate BH corrected p value
+    for (let i = entries.length - 1; i >= 0; i--) {
+        entries[i].padj = Math.min(
+            1,
+            Math.min(
+                (entries.length * entries[i].p) / (i + 1),
+                i < entries.length - 1 ? entries[i + 1].padj : 1
+            )
+        );
+    }
+    // use original order (sort by index) then return adjusted p values
+    return entries.sort((a, b) => a.index - b.index).map((entry) => entry.padj);
+}

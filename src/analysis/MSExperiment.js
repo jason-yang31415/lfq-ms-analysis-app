@@ -1,7 +1,7 @@
 import { DataFrame, Series } from "data-forge";
 import random from "random";
 import jstat from "jstat";
-import { ttest } from "./utils";
+import { pAdjust, ttest } from "./utils";
 
 class MSExperiment {
     /**
@@ -296,6 +296,16 @@ class MSExperiment {
                         )
                     )
                     .withIndex(this.data.getIndex())
+                    .bake()
+                    .withSeries({
+                        "adjusted p value": (df) =>
+                            new Series({
+                                index: df.getIndex(),
+                                values: pAdjust(
+                                    df.getSeries("p value").toArray()
+                                ),
+                            }),
+                    })
                     .bake();
 
                 // put comparison dataframe into `comparisons` map

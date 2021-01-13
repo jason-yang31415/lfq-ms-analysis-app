@@ -258,7 +258,7 @@ async function makeVolcanoPlot({ comparisons }) {
         data: [
             await Promise.all([
                 worker.getComparisonData(comparisons, "log FC"),
-                worker.getComparisonData(comparisons, "p value"),
+                worker.getComparisonData(comparisons, "adjusted p value"),
                 worker.getComparisonData(comparisons, "gene"),
             ]).then(([logfc, pvalues, genes]) => {
                 return {
@@ -283,6 +283,20 @@ async function makePValueHistogram({ comparisons }) {
             {
                 type: "histogram",
                 x: await worker.getComparisonData(comparisons, "p value"),
+                opacity: 0.5,
+                xbins: {
+                    start: 0,
+                    end: 1,
+                    size: 0.025,
+                },
+            },
+            {
+                type: "histogram",
+                x: await worker.getComparisonData(
+                    comparisons,
+                    "adjusted p value"
+                ),
+                opacity: 0.5,
                 xbins: {
                     start: 0,
                     end: 1,
@@ -292,6 +306,7 @@ async function makePValueHistogram({ comparisons }) {
         ],
         layout: {
             title: `${comparisons[1]} vs. ${comparisons[0]} p values`,
+            barmode: "overlay",
         },
     };
 }
