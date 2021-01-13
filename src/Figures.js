@@ -252,8 +252,11 @@ async function makePrePostImputationBoxplot({ samples, conditions }) {
     return ret;
 }
 
-async function makeVolcanoPlot({ comparisons }) {
+async function makeVolcanoPlot({ comparisons, highlightGenes }) {
     if (!comparisons) return { data: [], layout: {} };
+    const highlightGeneSet = new Set(
+        (highlightGenes || []).map((g) => g.toLowerCase())
+    );
     return {
         data: [
             await Promise.all([
@@ -267,6 +270,11 @@ async function makeVolcanoPlot({ comparisons }) {
                     x: logfc,
                     y: pvalues.map((p) => -1 * Math.log10(p)),
                     hovertext: genes,
+                    marker: {
+                        color: genes.map((g) =>
+                            highlightGeneSet.has(g.toLowerCase()) ? 1 : 0
+                        ),
+                    },
                 };
             }),
         ],

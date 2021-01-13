@@ -48,13 +48,9 @@ function MainPanelContainer({ id, samples }) {
                 {/* select figure options */}
                 <FigureOptions
                     figureType={figureOptions.type}
-                    onOptionsChange={({ samples, conditions, comparisons }) =>
+                    onOptionsChange={(changedOptions) =>
                         setFigureOptions(
-                            Object.assign({}, figureOptions, {
-                                samples,
-                                conditions,
-                                comparisons,
-                            })
+                            Object.assign({}, figureOptions, changedOptions)
                         )
                     }
                 />
