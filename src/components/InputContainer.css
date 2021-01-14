@@ -1,3 +1,14 @@
 .input-container {
     padding: 1rem;
+    overflow: auto;
+}
+
+.input-container > * {
+    margin-bottom: 0.5rem;
+}
+
+.input-container ul {
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 80%;
 }

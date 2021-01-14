@@ -136,6 +136,9 @@ async function makePrePostImputationViolin({ samples, conditions }) {
 
     Object.assign(ret.layout, {
         title: "log2 intensities pre- and post-imputation",
+        xaxis: {
+            title: "log2 intensity",
+        },
         yaxis: {
             automargin: true,
         },
@@ -245,6 +248,9 @@ async function makePrePostImputationBoxplot({ samples, conditions }) {
         xaxis: {
             automargin: true,
         },
+        yaxis: {
+            title: "log2 intensity",
+        },
         boxmode: "group",
         boxgap: -1,
         boxgroupgap: 0,
@@ -280,6 +286,12 @@ async function makeVolcanoPlot({ comparisons, highlightGenes }) {
         ],
         layout: {
             title: `${comparisons[1]} vs. ${comparisons[0]}`,
+            xaxis: {
+                title: `log2 (${comparisons[1]} / ${comparisons[0]})`,
+            },
+            yaxis: {
+                title: "-log10 (p_adjusted)",
+            },
         },
     };
 }
@@ -290,6 +302,7 @@ async function makePValueHistogram({ comparisons }) {
         data: [
             {
                 type: "histogram",
+                name: "p value",
                 x: await worker.getComparisonData(comparisons, "p value"),
                 opacity: 0.5,
                 xbins: {
@@ -300,6 +313,7 @@ async function makePValueHistogram({ comparisons }) {
             },
             {
                 type: "histogram",
+                name: "adjusted p value",
                 x: await worker.getComparisonData(
                     comparisons,
                     "adjusted p value"
@@ -315,6 +329,12 @@ async function makePValueHistogram({ comparisons }) {
         layout: {
             title: `${comparisons[1]} vs. ${comparisons[0]} p values`,
             barmode: "overlay",
+            xaxis: {
+                title: "p",
+            },
+            yaxis: {
+                title: "count",
+            },
         },
     };
 }
