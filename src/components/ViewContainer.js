@@ -1,13 +1,14 @@
 import React from "react";
 import { connect } from "react-redux";
 import { FIGURES } from "../Figures";
+import { downloadData } from "../RunAnalysis";
 import { ACTIONS, createAction } from "../store/actions";
 
 import FigureOptions from "./FigureOptions";
 
 import "./ViewContainer.css";
 
-function ViewContainer({ id, onOptionsSet }) {
+function ViewContainer({ id, onOptionsSet, onDownloadClick }) {
     const [figureOptions, setFigureOptions] = React.useState({});
 
     return (
@@ -49,6 +50,8 @@ function ViewContainer({ id, onOptionsSet }) {
             <button onClick={() => onOptionsSet(figureOptions)}>
                 View data
             </button>
+
+            <button onClick={onDownloadClick}>Download data</button>
         </div>
     );
 }
@@ -59,6 +62,9 @@ export default connect(null, (dispatch) => {
             dispatch(
                 createAction(ACTIONS.SET_VIEW_FIGURE_OPTIONS, figureOptions)
             );
+        },
+        onDownloadClick: () => {
+            dispatch(downloadData());
         },
     };
 })(ViewContainer);
