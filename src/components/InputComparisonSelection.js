@@ -36,7 +36,15 @@ function InputComparisonSelection({ conditions, onComparisonSelect }) {
             <button onClick={() => setComparisonModalOpen(true)}>
                 Select comparisons
             </button>
-            <Modal isOpen={comparisonModalOpen} id="input-comparison-modal">
+            <Modal
+                isOpen={comparisonModalOpen}
+                id="input-comparison-modal"
+                style={{
+                    overlay: {
+                        zIndex: 1000,
+                    },
+                }}
+            >
                 <h1 id="input-comparison-modal-head">Select comparisons</h1>
 
                 <table>

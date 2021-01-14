@@ -33,7 +33,15 @@ function InputReplicateSelection({ samples, onReplicatesSelect }) {
             <button onClick={() => setReplicatesModalOpen(true)}>
                 Select replicates
             </button>
-            <Modal isOpen={replicatesModalOpen} id="input-replicate-modal">
+            <Modal
+                isOpen={replicatesModalOpen}
+                id="input-replicate-modal"
+                style={{
+                    overlay: {
+                        zIndex: 1000,
+                    },
+                }}
+            >
                 <h1 id="input-replicate-modal-head">Select replicates</h1>
 
                 <select

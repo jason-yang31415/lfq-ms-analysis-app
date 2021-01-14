@@ -7,6 +7,9 @@ const initialState = {
         samples: [],
         conditions: [],
     },
+    view: {
+        figureOptions: {},
+    },
     side: {},
     main: {},
 };
@@ -29,6 +32,16 @@ function inputReducer(state, action) {
     return state;
 }
 
+function viewReducer(state, action) {
+    switch (action.type) {
+        case ACTIONS.SET_VIEW_FIGURE_OPTIONS:
+            return Object.assign({}, state, {
+                figureOptions: action.data,
+            });
+    }
+    return state;
+}
+
 function rootReducer(state = initialState, action) {
     const cpy = { ...state };
     switch (action.type) {
@@ -36,6 +49,9 @@ function rootReducer(state = initialState, action) {
         case ACTIONS.SET_INPUT_CONDITIONS:
         case ACTIONS.SET_INPUT_COMPARISONS:
             cpy.input = inputReducer(state.input, action);
+            break;
+        case ACTIONS.SET_VIEW_FIGURE_OPTIONS:
+            cpy.view = viewReducer(state.view, action);
             break;
     }
     return cpy;

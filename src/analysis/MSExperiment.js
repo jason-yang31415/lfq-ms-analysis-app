@@ -1,7 +1,7 @@
 import { DataFrame, Series } from "data-forge";
 import random from "random";
 import jstat from "jstat";
-import { ttest } from "./utils";
+import { pAdjust, ttest } from "./utils";
 
 class MSExperiment {
     /**
@@ -47,7 +47,7 @@ class MSExperiment {
         this.data = this.data
             // filter by "Potential contaminant" and "Reverse"
             .where((row) => !row["Potential contaminant"] && !row["Reverse"])
-            // keep only "uniprotID" and "LFQ intensity ..." columns
+            // keep only common columns and "LFQ intensity ..." columns
             .subset([
                 ...MSExperiment.COMMON_COLUMNS,
                 ...this.samples.map((sample) => `LFQ intensity ${sample}`),
@@ -65,15 +65,33 @@ class MSExperiment {
      */
     logTransform() {
         console.log("log transforming");
-        for (const sample of this.samples) {
-            this.data = this.data
-                // transform column by taking log2 or setting to NaN
-                .transformSeries({
-                    [`LFQ intensity ${sample}`]: (value) =>
-                        value > 0 ? Math.log2(value) : NaN,
-                })
-                .bake();
-        }
+        this.data = new DataFrame({
+            columns: {
+                // copy common columns from current dataframe
+                ...MSExperiment.COMMON_COLUMNS.reduce(
+                    (obj, column) =>
+                        Object.assign(obj, {
+                            [column]: this.data.getSeries(column),
+                        }),
+                    {}
+                ),
+                // log transform LFQ intensity columns
+                ...this.samples.reduce(
+                    (obj, sample) =>
+                        Object.assign(obj, {
+                            [`LFQ intensity ${sample}`]: this.data
+                                .getSeries(`LFQ intensity ${sample}`)
+                                .select((value) =>
+                                    // set to NaN if LFQ intensity is not
+                                    // positive
+                                    value > 0 ? Math.log2(value) : NaN
+                                ),
+                        }),
+                    {}
+                ),
+            },
+            index: this.data.getIndex(),
+        }).bake();
 
         this.snapshots.set(MSExperiment.SNAPSHOT_KEYS.LOG_TRANSFORM, this.data);
     }
@@ -101,28 +119,50 @@ class MSExperiment {
      */
     normalizeMedians() {
         console.log("normalizing medians");
-        const maxMedian = Math.max.apply(
-            null,
-            this.samples.map((sample) =>
+        // calculate medians of each sample and store in map
+        /** @type {Map<string, number>} */
+        const medians = new Map();
+        this.samples.map((sample) =>
+            medians.set(
+                sample,
                 this.data
                     .getSeries(`LFQ intensity ${sample}`)
                     .where((value) => !Number.isNaN(value))
                     .median()
             )
         );
+        const maxMedian = Math.max.apply(null, Array.from(medians.values()));
 
-        for (const sample of this.samples) {
-            const median = this.data
-                .getSeries(`LFQ intensity ${sample}`)
-                .where((value) => !Number.isNaN(value))
-                .median();
-            this.data = this.data
-                .transformSeries({
-                    [`LFQ intensity ${sample}`]: (value) =>
-                        (value * maxMedian) / median,
-                })
-                .bake();
-        }
+        this.data = new DataFrame({
+            columns: {
+                // copy common columns from current dataframe
+                ...MSExperiment.COMMON_COLUMNS.reduce(
+                    (obj, column) =>
+                        Object.assign(obj, {
+                            [column]: this.data.getSeries(column),
+                        }),
+                    {}
+                ),
+                // median normalize LFQ intensity columns
+                ...this.samples.reduce(
+                    (obj, sample) =>
+                        Object.assign(obj, {
+                            [`LFQ intensity ${sample}`]: this.data
+                                .getSeries(`LFQ intensity ${sample}`)
+                                .select(
+                                    // scale each sample intensity so that
+                                    // sample median matches the maximum sample
+                                    // median
+                                    (value) =>
+                                        (value * maxMedian) /
+                                        medians.get(sample)
+                                ),
+                        }),
+                    {}
+                ),
+            },
+            index: this.data.getIndex(),
+        }).bake();
 
         this.snapshots.set(
             MSExperiment.SNAPSHOT_KEYS.MEDIAN_NORMALIZATION,
@@ -150,26 +190,44 @@ class MSExperiment {
      */
     imputeMissingValues() {
         console.log("imputing missing values");
-        for (const sample of this.samples) {
-            const series = this.data
-                .getSeries(`LFQ intensity ${sample}`)
-                .where((value) => !Number.isNaN(value))
-                .bake();
-            const mean = series.average();
-            const stdev = series.std();
-
-            this.data = this.data
-                .transformSeries({
-                    [`LFQ intensity ${sample}`]: (value) =>
-                        Number.isNaN(value)
-                            ? random.uniform(
-                                  mean - 3 * stdev,
-                                  mean - 2 * stdev
-                              )()
-                            : value,
-                })
-                .bake();
-        }
+        this.data = new DataFrame({
+            columns: {
+                // copy common columns from current dataframe
+                ...MSExperiment.COMMON_COLUMNS.reduce(
+                    (obj, column) =>
+                        Object.assign(obj, {
+                            [column]: this.data.getSeries(column),
+                        }),
+                    {}
+                ),
+                // perform imputation on LFQ intensity columns
+                ...this.samples.reduce((obj, sample) => {
+                    // compute mean and standard deviation of non-NaN log
+                    // intensity values for the sample
+                    const series = this.data
+                        .getSeries(`LFQ intensity ${sample}`)
+                        .where((value) => !Number.isNaN(value))
+                        .bake();
+                    const mean = series.average();
+                    const stdev = series.std();
+                    obj[`LFQ intensity ${sample}`] = this.data
+                        .getSeries(`LFQ intensity ${sample}`)
+                        .select(
+                            // replace NaN's with random values drawn from
+                            // uniform distribution
+                            (value) =>
+                                Number.isNaN(value)
+                                    ? random.uniform(
+                                          mean - 3 * stdev,
+                                          mean - 2 * stdev
+                                      )()
+                                    : value
+                        );
+                    return obj;
+                }, {}),
+            },
+            index: this.data.getIndex(),
+        }).bake();
 
         this.snapshots.set(
             MSExperiment.SNAPSHOT_KEYS.IMPUTE_MISSING_VALUES,
@@ -184,51 +242,73 @@ class MSExperiment {
      * array
      */
     makeComparisons(comparisons) {
-        const rowConditionArray = (row, condition) =>
-            this.replicates
-                .get(condition)
-                .map((sample) => row[`LFQ intensity ${sample}`]);
-
-        const allConditions = Array.from(
-            new Set(
-                Object.keys(comparisons).concat(...Object.values(comparisons))
-            )
-        );
-        const conditionMeans = this.data.generateSeries(
-            allConditions.reduce(
-                (obj, condition) =>
-                    Object.assign(obj, {
-                        [`mean ${condition}`]: (row) =>
-                            jstat(rowConditionArray(row, condition)).mean(),
-                    }),
-                {}
-            )
-        );
-
+        console.log("making comparisons");
+        // loop through comparisons and set up `comparisons` map
         for (const [conditionA, value] of Object.entries(comparisons)) {
             if (!this.comparisons.has(conditionA))
                 this.comparisons.set(conditionA, new Map());
 
             for (const conditionB of value) {
-                const comparisonData = conditionMeans
-                    .generateSeries({
-                        "log FC": (row) =>
-                            row[`mean ${conditionB}`] -
-                            row[`mean ${conditionA}`],
-                        "p value": (row) =>
-                            ttest(
-                                rowConditionArray(row, conditionB),
-                                rowConditionArray(row, conditionA)
-                            ).p,
+                const comparisonData = DataFrame.zip(
+                    // for conditionA and conditionB, zip LFQ intensity columns
+                    // to make a column containing arrays of intensities from
+                    // replicates for that condition
+                    [conditionA, conditionB].map((condition) =>
+                        DataFrame.zip(
+                            this.replicates
+                                .get(condition)
+                                .map((sample) =>
+                                    this.data.getSeries(
+                                        `LFQ intensity ${sample}`
+                                    )
+                                ),
+                            // zip multiple replicate columns into single
+                            // column containing array of values
+                            (values) => values.toArray()
+                        )
+                    ),
+                    // zip conditionA and conditionB columns of arrays arrA and
+                    // arrB
+                    ([arrA, arrB]) => {
+                        // calculate means of conditionA and conditionB
+                        // intensities
+                        const meanA = jstat(arrA).mean();
+                        const meanB = jstat(arrB).mean();
+                        // perform two-sample two-tailed t test (Welch) using
+                        // arrays of intensities to get p value
+                        const pvalue = ttest(arrA, arrB).p;
+                        return {
+                            [`mean ${conditionA}`]: meanA,
+                            [`mean ${conditionB}`]: meanB,
+                            "log FC": meanB - meanA,
+                            "p value": pvalue,
+                        };
+                    }
+                )
+                    // copy common columns
+                    .withSeries(
+                        MSExperiment.COMMON_COLUMNS.reduce(
+                            (obj, column) =>
+                                Object.assign(obj, {
+                                    [column]: this.data.getSeries(column),
+                                }),
+                            {}
+                        )
+                    )
+                    .withIndex(this.data.getIndex())
+                    .bake()
+                    .withSeries({
+                        "adjusted p value": (df) =>
+                            new Series({
+                                index: df.getIndex(),
+                                values: pAdjust(
+                                    df.getSeries("p value").toArray()
+                                ),
+                            }),
                     })
-                    .subset([
-                        ...MSExperiment.COMMON_COLUMNS,
-                        `mean ${conditionA}`,
-                        `mean ${conditionB}`,
-                        "log FC",
-                        "p value",
-                    ])
                     .bake();
+
+                // put comparison dataframe into `comparisons` map
                 this.comparisons
                     .get(conditionA)
                     .set(conditionB, comparisonData);

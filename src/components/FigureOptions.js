@@ -11,7 +11,6 @@ function FigureOptions({
     figureType,
     onOptionsChange,
 }) {
-    console.log(comparisons);
     const [sampleCondition, setSampleCondition] = React.useState("samples");
 
     let options;
@@ -20,6 +19,10 @@ function FigureOptions({
         case FIGURES.PRE_POST_IMPUTATION_BOXPLOT:
             const onFigureTypeChange = (e) => {
                 setSampleCondition(e.currentTarget.value);
+                onOptionsChange({
+                    samples: undefined,
+                    conditions: undefined,
+                });
             };
 
             options = (
@@ -69,33 +72,44 @@ function FigureOptions({
         case FIGURES.VOLCANO:
         case FIGURES.P_VALUE_HISTOGRAM:
             options = (
-                <select
-                    multiple
-                    onChange={(e) => {
-                        onOptionsChange({
-                            comparisons: JSON.parse(e.target.value),
-                        });
-                    }}
-                >
-                    {Object.entries(comparisons || {})
-                        .map(([conditionA, value]) =>
-                            value.map((conditionB) => (
-                                <option
-                                    value={JSON.stringify([
-                                        conditionA,
-                                        conditionB,
-                                    ])}
-                                    key={JSON.stringify([
-                                        conditionA,
-                                        conditionB,
-                                    ])}
-                                >
-                                    {conditionB} vs. {conditionA}
-                                </option>
-                            ))
-                        )
-                        .flat()}
-                </select>
+                <>
+                    <select
+                        multiple
+                        onChange={(e) => {
+                            onOptionsChange({
+                                comparisons: JSON.parse(e.target.value),
+                            });
+                        }}
+                    >
+                        {Object.entries(comparisons || {})
+                            .map(([conditionA, value]) =>
+                                value.map((conditionB) => (
+                                    <option
+                                        value={JSON.stringify([
+                                            conditionA,
+                                            conditionB,
+                                        ])}
+                                        key={JSON.stringify([
+                                            conditionA,
+                                            conditionB,
+                                        ])}
+                                    >
+                                        {conditionB} vs. {conditionA}
+                                    </option>
+                                ))
+                            )
+                            .flat()}
+                    </select>
+                    <textarea
+                        onChange={(e) =>
+                            onOptionsChange({
+                                highlightGenes: e.target.value
+                                    .split("\n")
+                                    .filter((g) => g !== ""),
+                            })
+                        }
+                    ></textarea>
+                </>
             );
             break;
     }

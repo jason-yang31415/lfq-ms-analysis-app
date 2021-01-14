@@ -47,7 +47,22 @@ export function onReplicatesSelect(conditions) {
 export function onComparisonsSelect(comparisons) {
     return (dispatch) => {
         // transfer comparisons object to worker for processing
-        worker.onComparisonsSelect(comparisons);
-        dispatch(createAction(ACTIONS.SET_INPUT_COMPARISONS, comparisons));
+        worker.onComparisonsSelect(comparisons).then(() => {
+            dispatch(createAction(ACTIONS.SET_INPUT_COMPARISONS, comparisons));
+        });
+    };
+}
+
+export function downloadData() {
+    return (dispatch) => {
+        // get bytes to save as excel file from worker
+        worker.downloadData().then((data) => {
+            // make new blob and link pointing to blob, click to save file
+            const blob = new Blob([data], { type: "application/vnd.ms-excel" });
+            const link = document.createElement("a");
+            link.href = window.URL.createObjectURL(blob);
+            link.download = "results.xlsx";
+            link.click();
+        });
     };
 }

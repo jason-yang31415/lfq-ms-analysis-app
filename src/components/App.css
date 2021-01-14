@@ -3,14 +3,18 @@
     height: 100vh;
     display: grid;
     grid-template-areas:
-        "input main"
+        "input view"
         "side main";
     grid-template-columns: 1fr 2fr;
-    grid-template-rows: 1fr 2fr;
+    grid-template-rows: 1fr 2.5fr;
 }
 
 #input-container {
     grid-area: input;
+}
+
+#view-container {
+    grid-area: view;
 }
 
 #mainpanel-container {
@@ -19,5 +23,5 @@
 
 #sidepanel-container {
     grid-area: side;
-    background-color: red;
+    overflow: auto;
 }
