@@ -6,7 +6,7 @@
         "foot foot foot";
     grid-template-rows: auto 1fr auto;
     grid-template-columns: 1fr auto 1fr;
-    gap: 1rem;
+    gap: 2rem;
 }
 
 #input-replicate-modal-head {
@@ -17,4 +17,15 @@
     grid-area: foot;
     margin-top: 1rem;
     text-align: center;
+}
+
+#input-replicate-modal-left,
+#input-replicate-modal-right {
+    display: flex;
+    flex-direction: column;
+}
+
+#input-replicate-modal-left > select,
+#input-replicate-modal-right > select {
+    flex-grow: 1;
 }

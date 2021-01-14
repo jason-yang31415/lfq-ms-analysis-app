@@ -4,13 +4,22 @@ import { onDataUpload } from "../RunAnalysis";
 function InputDataUpload({ onDataUpload }) {
     return (
         <div>
-            <label htmlFor="dataUpload">Upload data: </label>
+            <label htmlFor="dataUpload">
+                (1) Upload data to begin analysis:{" "}
+            </label>
             <input
                 type="file"
                 id="dataUpload"
                 name="dataUpload"
                 onInput={(e) => onDataUpload(e.target.files[0])}
             />
+
+            <ul>
+                <li>
+                    View log-transformed intensity distributions per sample as
+                    violin plot or boxplot.
+                </li>
+            </ul>
         </div>
     );
 }

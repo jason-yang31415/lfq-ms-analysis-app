@@ -12,46 +12,49 @@ function ViewContainer({ id, onOptionsSet, onDownloadClick }) {
     const [figureOptions, setFigureOptions] = React.useState({});
 
     return (
-        <div id={id} className="main-figure-options">
-            {/* select figure type */}
-            <select
-                onChange={(e) => {
-                    setFigureOptions(
-                        Object.assign({}, figureOptions, {
-                            type: e.target.value,
-                        })
-                    );
-                }}
-                defaultValue="default"
-            >
-                {[
-                    <option disabled value="default" key="default">
-                        -- select an option --
-                    </option>,
-                    ...Object.keys(FIGURES).map((fig) => (
-                        <option value={fig} key={fig}>
-                            {fig}
-                        </option>
-                    )),
-                ]}
-            </select>
+        <div id={id} className="view-container">
+            <p>Select data to view.</p>
+            <div className="figure-options">
+                {/* select figure type */}
+                <select
+                    onChange={(e) => {
+                        setFigureOptions(
+                            Object.assign({}, figureOptions, {
+                                type: e.target.value,
+                            })
+                        );
+                    }}
+                    defaultValue="default"
+                >
+                    {[
+                        <option disabled value="default" key="default">
+                            -- select an option --
+                        </option>,
+                        ...Object.keys(FIGURES).map((fig) => (
+                            <option value={fig} key={fig}>
+                                {fig}
+                            </option>
+                        )),
+                    ]}
+                </select>
 
-            {/* select figure options */}
-            <FigureOptions
-                figureType={figureOptions.type}
-                onOptionsChange={(changedOptions) =>
-                    setFigureOptions(
-                        Object.assign({}, figureOptions, changedOptions)
-                    )
-                }
-            />
+                {/* select figure options */}
+                <FigureOptions
+                    figureType={figureOptions.type}
+                    onOptionsChange={(changedOptions) =>
+                        setFigureOptions(
+                            Object.assign({}, figureOptions, changedOptions)
+                        )
+                    }
+                />
 
-            {/* set options */}
-            <button onClick={() => onOptionsSet(figureOptions)}>
-                View data
-            </button>
+                {/* set options */}
+                <button onClick={() => onOptionsSet(figureOptions)}>
+                    View data
+                </button>
 
-            <button onClick={onDownloadClick}>Download data</button>
+                <button onClick={onDownloadClick}>Download data</button>
+            </div>
         </div>
     );
 }

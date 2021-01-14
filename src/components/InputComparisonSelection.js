@@ -33,9 +33,23 @@ function InputComparisonSelection({ conditions, onComparisonSelect }) {
 
     return (
         <div>
+            <span>(3) </span>
             <button onClick={() => setComparisonModalOpen(true)}>
                 Select comparisons
             </button>
+
+            <ul>
+                <li>
+                    View enriched and depleted proteins per comparison as
+                    volcano plot.
+                </li>
+                <li>View distribution of p values and adjusted p values.</li>
+                <li>
+                    View mean intensities, log fold changes, p values as data
+                    table.
+                </li>
+            </ul>
+
             <Modal
                 isOpen={comparisonModalOpen}
                 id="input-comparison-modal"

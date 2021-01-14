@@ -1,6 +1,14 @@
-.main-figure-options {
-    flex: 0 0 10rem;
-    padding: 1rem;
+.view-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.view-container > * {
+    margin: 0.5rem;
+}
+
+.figure-options {
+    flex: 1 0 5rem;
     display: flex;
     justify-content: space-between;
     gap: 1rem;
