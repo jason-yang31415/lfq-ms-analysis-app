@@ -44,6 +44,13 @@ export function onReplicatesSelect(conditions) {
     };
 }
 
+export function onImpute(options) {
+    return (dispatch) => {
+        // transfer options to worker and do processing/imputation
+        worker.onImpute(options);
+    };
+}
+
 export function onComparisonsSelect(comparisons) {
     return (dispatch) => {
         // transfer comparisons object to worker for processing

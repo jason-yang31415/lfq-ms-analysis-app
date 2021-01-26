@@ -3,6 +3,7 @@ import exceljs from "exceljs";
 
 import { readMaxQuant } from "./analysis/DataPreparation";
 import currentExperiment from "./analysis";
+import MSExperiment from "./analysis/MSExperiment";
 
 /**
  * Begin analysis after file is uploaded by user.
@@ -18,8 +19,6 @@ function onDataUpload(arraybuffer) {
         experiment.removeContaminants();
         experiment.logTransform();
         experiment.removeAllNaN();
-        experiment.normalizeMedians();
-        experiment.imputeMissingValues();
     });
 }
 
@@ -32,6 +31,20 @@ function onReplicatesSelect(conditions) {
     const experiment = currentExperiment();
     if (!experiment) return;
     experiment.setReplicates(conditions);
+}
+
+/**
+ * Continues analysis with pre-processing and imputation options
+ *  - Normalize samples to match medians
+ *  - Impute missing values using selected method
+ * @param {object} options
+ */
+function onImpute(options) {
+    const experiment = currentExperiment();
+    if (!experiment) return;
+    experiment.resetToSnapshot(MSExperiment.SNAPSHOT_KEYS.LOG_TRANSFORM);
+    experiment.normalizeMedians(options.normalize);
+    experiment.imputeMissingValues(options.method);
 }
 
 /**
@@ -56,6 +69,7 @@ function onComparisonsSelect(comparisons) {
 function getData(column, key = null) {
     const experiment = currentExperiment();
     if (!experiment) return;
+    if (key != null && !experiment.snapshots.has(key)) return;
     const data = key == null ? experiment.data : experiment.snapshots.get(key);
     return data.getSeries(column).toArray();
 }
@@ -131,6 +145,7 @@ function downloadData() {
 expose({
     onDataUpload,
     onReplicatesSelect,
+    onImpute,
     onComparisonsSelect,
     getData,
     getComparisonData,

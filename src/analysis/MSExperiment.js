@@ -36,7 +36,17 @@ class MSExperiment {
         IMPUTE_MISSING_VALUES: "IMPUTE_MISSING_VALUES",
     };
 
+    resetToSnapshot(key) {
+        if (this.snapshots.has(key)) this.data = this.snapshots.get(key);
+    }
+
     static COMMON_COLUMNS = ["id", "uniprotID", "gene"];
+
+    static IMPUTATION_METHODS = {
+        METHOD_31: "METHOD_31",
+        METHOD_46: "METHOD_46",
+        METHOD_47: "METHOD_47",
+    };
 
     /**
      * Modifies `data` to remove entries with True for "Potential contaminant"
@@ -92,8 +102,6 @@ class MSExperiment {
             },
             index: this.data.getIndex(),
         }).bake();
-
-        this.snapshots.set(MSExperiment.SNAPSHOT_KEYS.LOG_TRANSFORM, this.data);
     }
 
     /**
@@ -111,14 +119,25 @@ class MSExperiment {
                     )
             )
             .bake();
+
+        this.snapshots.set(MSExperiment.SNAPSHOT_KEYS.LOG_TRANSFORM, this.data);
     }
 
     /**
      * Modifies `data` such that each sample is scaled to have the same median
      * value, equal to the highest median pre-scaling.
      */
-    normalizeMedians() {
+    normalizeMedians(normalize) {
         console.log("normalizing medians");
+
+        if (!normalize) {
+            this.snapshots.set(
+                MSExperiment.SNAPSHOT_KEYS.MEDIAN_NORMALIZATION,
+                this.data
+            );
+            return;
+        }
+
         // calculate medians of each sample and store in map
         /** @type {Map<string, number>} */
         const medians = new Map();
@@ -188,7 +207,7 @@ class MSExperiment {
      * ranging from -3 * sigma to -2 * sigma among non-NA log2 intensity
      * values within the same sample.
      */
-    imputeMissingValues() {
+    imputeMissingValues(method) {
         console.log("imputing missing values");
         this.data = new DataFrame({
             columns: {

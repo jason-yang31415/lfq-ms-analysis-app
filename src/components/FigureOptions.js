@@ -15,6 +15,7 @@ function FigureOptions({
 
     let options;
     switch (figureType) {
+        case FIGURES.LOG_VIOLIN:
         case FIGURES.PRE_POST_IMPUTATION_VIOLIN:
         case FIGURES.PRE_POST_IMPUTATION_BOXPLOT:
             const onFigureTypeChange = (e) => {
