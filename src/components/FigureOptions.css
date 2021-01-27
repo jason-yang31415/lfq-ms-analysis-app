@@ -3,3 +3,9 @@
     display: flex;
     gap: 1rem;
 }
+
+.sample-condition-selector,
+.comparison-selector,
+.highlight-genes-textbox {
+    flex-grow: 1;
+}
