@@ -1,6 +1,7 @@
 import worker from "./AnalysisWorker";
 import { transfer } from "comlink";
 import { ACTIONS, createAction } from "./store/actions";
+import Plotly from "plotly.js";
 
 /**
  * This file interfaces between UI and analysis. UI changes are handled on the
@@ -70,6 +71,17 @@ export function downloadData() {
             link.href = window.URL.createObjectURL(blob);
             link.download = "results.xlsx";
             link.click();
+        });
+    };
+}
+
+export function saveFigure() {
+    return (dispatch) => {
+        Plotly.downloadImage("mainpanel-figure", {
+            format: "png",
+            width: 1024,
+            height: 1024,
+            filename: "figure",
         });
     };
 }
