@@ -31,6 +31,7 @@ jobs:
     - run: npm run build
       env:
         CI: false
+        NODE_OPTIONS: '--max_old_space_size=4096'
     - name: Install SSH
       uses: webfactory/ssh-agent@v0.4.1
       with :
