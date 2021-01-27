@@ -2,6 +2,7 @@ import worker from "./AnalysisWorker";
 import MSExperiment from "./analysis/MSExperiment";
 
 export const FIGURES = {
+    LOG_VIOLIN: "LOG_VIOLIN",
     PRE_POST_IMPUTATION_VIOLIN: "PRE_POST_IMPUTATION_VIOLIN",
     PRE_POST_IMPUTATION_BOXPLOT: "PRE_POST_IMPUTATION_BOXPLOT",
     VOLCANO: "VOLCANO",
@@ -13,6 +14,9 @@ export async function makePlotlyDataLayout(options) {
 
     let ret = { data: [], layout: {} };
     switch (type) {
+        case FIGURES.LOG_VIOLIN:
+            ret = await makeLogViolin(options);
+            break;
         case FIGURES.PRE_POST_IMPUTATION_VIOLIN:
             ret = await makePrePostImputationViolin(options);
             break;
@@ -28,6 +32,79 @@ export async function makePlotlyDataLayout(options) {
     }
     ret.layout.autosize = true;
 
+    return ret;
+}
+
+async function makeLogViolin({ samples, conditions }) {
+    const makeViolinTrace = (trace) => {
+        return Object.assign(trace, {
+            type: "violin",
+            width: 1,
+            points: false,
+        });
+    };
+
+    let ret = { data: [], layout: {} };
+    if (samples != undefined && conditions == undefined) {
+        ret = {
+            data: await Promise.all(
+                samples.map((sample) =>
+                    worker
+                        .getData(
+                            `LFQ intensity ${sample}`,
+                            MSExperiment.SNAPSHOT_KEYS.LOG_TRANSFORM
+                        )
+                        .then((data) =>
+                            makeViolinTrace({
+                                x: data,
+                                y0: sample,
+                                side: "positive",
+                            })
+                        )
+                )
+            ),
+            layout: {},
+        };
+    } else if (samples == undefined && conditions != undefined) {
+        const replicates = await worker.getReplicates();
+        ret = {
+            data: await Promise.all(
+                conditions.map((condition) =>
+                    Promise.all(
+                        replicates
+                            .get(condition)
+                            .map((sample) =>
+                                worker.getData(
+                                    `LFQ intensity ${sample}`,
+                                    MSExperiment.SNAPSHOT_KEYS
+                                        .MEDIAN_NORMALIZATION
+                                )
+                            )
+                    )
+                        .then((array) => array.flat())
+                        .then((data) =>
+                            makeViolinTrace({
+                                x: data,
+                                y0: condition,
+                                side: "positive",
+                            })
+                        )
+                )
+            ),
+            layout: {},
+        };
+    }
+
+    Object.assign(ret.layout, {
+        title: "log2 intensities",
+        showlegend: false,
+        xaxis: {
+            title: "log2 intensity",
+        },
+        yaxis: {
+            automargin: true,
+        },
+    });
     return ret;
 }
 

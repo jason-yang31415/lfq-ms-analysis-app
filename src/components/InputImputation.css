@@ -1,0 +1,19 @@
+#input-imputation-modal {
+    display: grid;
+    grid-template-areas:
+        "head"
+        "body"
+        "foot";
+    grid-template-rows: auto 1fr auto;
+    gap: 2rem;
+}
+
+#input-replicate-modal-head {
+    grid-area: head;
+}
+
+#input-replicate-modal-foot {
+    grid-area: foot;
+    margin-top: 1rem;
+    text-align: center;
+}

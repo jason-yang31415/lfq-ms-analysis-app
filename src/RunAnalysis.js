@@ -1,6 +1,7 @@
 import worker from "./AnalysisWorker";
 import { transfer } from "comlink";
 import { ACTIONS, createAction } from "./store/actions";
+import Plotly from "plotly.js";
 
 /**
  * This file interfaces between UI and analysis. UI changes are handled on the
@@ -44,6 +45,13 @@ export function onReplicatesSelect(conditions) {
     };
 }
 
+export function onImpute(options) {
+    return (dispatch) => {
+        // transfer options to worker and do processing/imputation
+        worker.onImpute(options);
+    };
+}
+
 export function onComparisonsSelect(comparisons) {
     return (dispatch) => {
         // transfer comparisons object to worker for processing
@@ -63,6 +71,17 @@ export function downloadData() {
             link.href = window.URL.createObjectURL(blob);
             link.download = "results.xlsx";
             link.click();
+        });
+    };
+}
+
+export function saveFigure() {
+    return (dispatch) => {
+        Plotly.downloadImage("mainpanel-figure", {
+            format: "png",
+            width: 1024,
+            height: 1024,
+            filename: "figure",
         });
     };
 }

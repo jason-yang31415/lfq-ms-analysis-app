@@ -27,6 +27,7 @@ function MainPanelContainer({ id, figureOptions }) {
                         width: "100%",
                         height: "100%",
                     }}
+                    divId="mainpanel-figure"
                 />
             </div>
         );

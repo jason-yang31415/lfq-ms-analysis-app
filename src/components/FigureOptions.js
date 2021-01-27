@@ -15,6 +15,7 @@ function FigureOptions({
 
     let options;
     switch (figureType) {
+        case FIGURES.LOG_VIOLIN:
         case FIGURES.PRE_POST_IMPUTATION_VIOLIN:
         case FIGURES.PRE_POST_IMPUTATION_BOXPLOT:
             const onFigureTypeChange = (e) => {
@@ -49,6 +50,7 @@ function FigureOptions({
                         <label htmlFor="figureTypeConditions">Conditions</label>
                     </div>
                     <select
+                        className="sample-condition-selector"
                         multiple
                         onChange={(e) => {
                             onOptionsChange({
@@ -74,6 +76,7 @@ function FigureOptions({
             options = (
                 <>
                     <select
+                        className="comparison-selector"
                         multiple
                         onChange={(e) => {
                             onOptionsChange({
@@ -101,6 +104,8 @@ function FigureOptions({
                             .flat()}
                     </select>
                     <textarea
+                        className="highlight-genes-textbox"
+                        placeholder="highlight genes in volcano plot (case insensitive); one gene per line"
                         onChange={(e) =>
                             onOptionsChange({
                                 highlightGenes: e.target.value

@@ -33,7 +33,7 @@ function InputComparisonSelection({ conditions, onComparisonSelect }) {
 
     return (
         <div>
-            <span>(3) </span>
+            <span>(4) </span>
             <button onClick={() => setComparisonModalOpen(true)}>
                 Select comparisons
             </button>
