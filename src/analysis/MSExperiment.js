@@ -1,7 +1,7 @@
 import { DataFrame, Series } from "data-forge";
-import random from "random";
 import jstat from "jstat";
 import { pAdjust, ttest } from "./utils";
+import * as Imputation from "./Imputation";
 
 class MSExperiment {
     /**
@@ -209,44 +209,24 @@ class MSExperiment {
      */
     imputeMissingValues(method) {
         console.log("imputing missing values");
-        this.data = new DataFrame({
-            columns: {
-                // copy common columns from current dataframe
-                ...MSExperiment.COMMON_COLUMNS.reduce(
-                    (obj, column) =>
-                        Object.assign(obj, {
-                            [column]: this.data.getSeries(column),
-                        }),
-                    {}
-                ),
-                // perform imputation on LFQ intensity columns
-                ...this.samples.reduce((obj, sample) => {
-                    // compute mean and standard deviation of non-NaN log
-                    // intensity values for the sample
-                    const series = this.data
-                        .getSeries(`LFQ intensity ${sample}`)
-                        .where((value) => !Number.isNaN(value))
-                        .bake();
-                    const mean = series.average();
-                    const stdev = series.std();
-                    obj[`LFQ intensity ${sample}`] = this.data
-                        .getSeries(`LFQ intensity ${sample}`)
-                        .select(
-                            // replace NaN's with random values drawn from
-                            // uniform distribution
-                            (value) =>
-                                Number.isNaN(value)
-                                    ? random.uniform(
-                                          mean - 3 * stdev,
-                                          mean - 2 * stdev
-                                      )()
-                                    : value
-                        );
-                    return obj;
-                }, {}),
-            },
-            index: this.data.getIndex(),
-        }).bake();
+
+        switch (method) {
+            case MSExperiment.IMPUTATION_METHODS.METHOD_31:
+                this.data = Imputation.imputeUniform(this.data, this.samples);
+                break;
+            case MSExperiment.IMPUTATION_METHODS.METHOD_46:
+                this.data = Imputation.imputeRelative(
+                    this.data,
+                    this.replicates
+                );
+                break;
+            case MSExperiment.IMPUTATION_METHODS.METHOD_47:
+                this.data = Imputation.imputeRelative(
+                    this.data,
+                    this.replicates,
+                    1
+                );
+        }
 
         this.snapshots.set(
             MSExperiment.SNAPSHOT_KEYS.IMPUTE_MISSING_VALUES,
