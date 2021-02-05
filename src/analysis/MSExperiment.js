@@ -239,8 +239,17 @@ class MSExperiment {
      * @param {Object.<string, string[]>} comparisons object containing
      * comparisons to make, with condition A as key and condition B in values
      * array
+     * @param {number} thresholdP threshold adjusted p value to call a protein
+     * significant
+     * @param {number} thresholdLogFC threshold log2 fold change in intensity
+     * to call a protein significant
+     * @param {number} thresholdReps threshold number of replicates detected in
+     * the same condition to call a protein significant
      */
-    makeComparisons(comparisons) {
+    makeComparisons(
+        comparisons,
+        { thresholdP = 0.05, thresholdLogFC = 1, thresholdReps = 2 } = {}
+    ) {
         console.log("making comparisons");
         // loop through comparisons and set up `comparisons` map
         for (const [conditionA, value] of Object.entries(comparisons)) {
@@ -248,27 +257,44 @@ class MSExperiment {
                 this.comparisons.set(conditionA, new Map());
 
             for (const conditionB of value) {
+                // subset relevant columns of raw data to count number of
+                // non-zero replicates later
+                const rawA = this.rawData.subset(
+                    this.replicates
+                        .get(conditionA)
+                        .map((sample) => `LFQ intensity ${sample}`)
+                );
+                const rawB = this.rawData.subset(
+                    this.replicates
+                        .get(conditionB)
+                        .map((sample) => `LFQ intensity ${sample}`)
+                );
+
                 const comparisonData = DataFrame.zip(
-                    // for conditionA and conditionB, zip LFQ intensity columns
-                    // to make a column containing arrays of intensities from
-                    // replicates for that condition
-                    [conditionA, conditionB].map((condition) =>
-                        DataFrame.zip(
-                            this.replicates
-                                .get(condition)
-                                .map((sample) =>
-                                    this.data.getSeries(
-                                        `LFQ intensity ${sample}`
-                                    )
-                                ),
-                            // zip multiple replicate columns into single
-                            // column containing array of values
-                            (values) => values.toArray()
-                        )
-                    ),
+                    [
+                        // for conditionA and conditionB, zip LFQ intensity columns
+                        // to make a column containing arrays of intensities from
+                        // replicates for that condition
+                        ...[conditionA, conditionB].map((condition) =>
+                            DataFrame.zip(
+                                this.replicates
+                                    .get(condition)
+                                    .map((sample) =>
+                                        this.data.getSeries(
+                                            `LFQ intensity ${sample}`
+                                        )
+                                    ),
+                                // zip multiple replicate columns into single
+                                // column containing array of values
+                                (values) => values.toArray()
+                            )
+                        ),
+                        // pass id as third item to zip
+                        this.data.subset(["id"]),
+                    ],
                     // zip conditionA and conditionB columns of arrays arrA and
                     // arrB
-                    ([arrA, arrB]) => {
+                    ([arrA, arrB, { id: rowId }]) => {
                         // calculate means of conditionA and conditionB
                         // intensities
                         const meanA = jstat(arrA).mean();
@@ -276,11 +302,22 @@ class MSExperiment {
                         // perform two-sample two-tailed t test (Welch) using
                         // arrays of intensities to get p value
                         const pvalue = ttest(arrA, arrB).p;
+
+                        // count number of replicates detected in raw data in
+                        // each condition
+                        const countNonzeroReps = (raw) =>
+                            Object.values(raw.at(rowId)).reduce((acc, val) => {
+                                if (Number(val) !== 0) acc++;
+                                return acc;
+                            }, 0);
+
                         return {
                             [`mean ${conditionA}`]: meanA,
                             [`mean ${conditionB}`]: meanB,
                             "log FC": meanB - meanA,
                             "p value": pvalue,
+                            [`N ${conditionA}`]: countNonzeroReps(rawA),
+                            [`N ${conditionB}`]: countNonzeroReps(rawB),
                         };
                     }
                 )
@@ -296,6 +333,7 @@ class MSExperiment {
                     )
                     .withIndex(this.data.getIndex())
                     .bake()
+                    // calculate adjusted p value
                     .withSeries({
                         "adjusted p value": (df) =>
                             new Series({
@@ -304,6 +342,20 @@ class MSExperiment {
                                     df.getSeries("p value").toArray()
                                 ),
                             }),
+                    })
+                    .bake()
+                    // check significance by p value, log FC, and replicates
+                    // detected
+                    .select((row) => {
+                        const output = { ...row };
+                        output["significant"] =
+                            row["adjusted p value"] <= thresholdP &&
+                            Math.abs(row["log FC"]) >= thresholdLogFC &&
+                            (row[`N ${conditionA}`] >= thresholdReps ||
+                                row[`N ${conditionB}`] >= thresholdReps)
+                                ? "yes"
+                                : "no";
+                        return output;
                     })
                     .bake();
 

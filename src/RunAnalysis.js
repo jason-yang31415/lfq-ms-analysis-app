@@ -52,10 +52,10 @@ export function onImpute(options) {
     };
 }
 
-export function onComparisonsSelect(comparisons) {
+export function onComparisonsSelect(comparisons, thresholds) {
     return (dispatch) => {
         // transfer comparisons object to worker for processing
-        worker.onComparisonsSelect(comparisons).then(() => {
+        worker.onComparisonsSelect(comparisons, thresholds).then(() => {
             dispatch(createAction(ACTIONS.SET_INPUT_COMPARISONS, comparisons));
         });
     };
