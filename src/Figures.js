@@ -134,6 +134,9 @@ async function makePrePostImputationViolin({ samples, conditions }) {
                                 y0: sample,
                                 legendgroup: "pre",
                                 side: "positive",
+                                line: {
+                                    color: "#1f77b4",
+                                },
                             })
                         )
                 ),
@@ -150,6 +153,9 @@ async function makePrePostImputationViolin({ samples, conditions }) {
                                 y0: sample,
                                 legendgroup: "post",
                                 side: "negative",
+                                line: {
+                                    color: "#ff7f0e",
+                                },
                             })
                         )
                 ),
@@ -180,6 +186,9 @@ async function makePrePostImputationViolin({ samples, conditions }) {
                                 y0: condition,
                                 legendgroup: "pre",
                                 side: "positive",
+                                line: {
+                                    color: "#1f77b4",
+                                },
                             })
                         )
                 ),
@@ -203,6 +212,9 @@ async function makePrePostImputationViolin({ samples, conditions }) {
                                 y0: condition,
                                 legendgroup: "post",
                                 side: "negative",
+                                line: {
+                                    color: "#ff7f0e",
+                                },
                             })
                         )
                 ),
@@ -246,6 +258,9 @@ async function makePrePostImputationBoxplot({ samples, conditions }) {
                                 y: data,
                                 x0: sample,
                                 legendgroup: "pre",
+                                marker: {
+                                    color: "#1f77b4",
+                                },
                             })
                         )
                 ),
@@ -261,6 +276,9 @@ async function makePrePostImputationBoxplot({ samples, conditions }) {
                                 y: data,
                                 x0: sample,
                                 legendgroup: "post",
+                                marker: {
+                                    color: "#ff7f0e",
+                                },
                             })
                         )
                 ),
@@ -290,6 +308,9 @@ async function makePrePostImputationBoxplot({ samples, conditions }) {
                                 y: data,
                                 x0: condition,
                                 legendgroup: "pre",
+                                marker: {
+                                    color: "#1f77b4",
+                                },
                             })
                         )
                 ),
@@ -312,6 +333,9 @@ async function makePrePostImputationBoxplot({ samples, conditions }) {
                                 y: data,
                                 x0: condition,
                                 legendgroup: "post",
+                                marker: {
+                                    color: "#ff7f0e",
+                                },
                             })
                         )
                 ),
