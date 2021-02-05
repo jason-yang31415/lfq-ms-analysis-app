@@ -53,11 +53,11 @@ function onImpute(options) {
  *  - Calculate log2 LFQ intensity difference and perform t-test
  * @param {Object.<string, string[]>} comparisons
  */
-function onComparisonsSelect(comparisons) {
+function onComparisonsSelect(comparisons, thresholds) {
     const experiment = currentExperiment();
     if (!experiment) return;
     if (!comparisons) return;
-    experiment.makeComparisons(comparisons);
+    experiment.makeComparisons(comparisons, thresholds);
 }
 
 /**

@@ -1,6 +1,6 @@
 #input-comparison-modal {
     display: grid;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto 1fr 1fr auto;
     gap: 1rem;
 }
 

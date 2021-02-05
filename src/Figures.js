@@ -346,7 +346,8 @@ async function makeVolcanoPlot({ comparisons, highlightGenes }) {
                 worker.getComparisonData(comparisons, "log FC"),
                 worker.getComparisonData(comparisons, "adjusted p value"),
                 worker.getComparisonData(comparisons, "gene"),
-            ]).then(([logfc, pvalues, genes]) => {
+                worker.getComparisonData(comparisons, "significant"),
+            ]).then(([logfc, pvalues, genes, significant]) => {
                 return {
                     type: "scattergl",
                     mode: "markers",
@@ -354,9 +355,16 @@ async function makeVolcanoPlot({ comparisons, highlightGenes }) {
                     y: pvalues.map((p) => -1 * Math.log10(p)),
                     hovertext: genes,
                     marker: {
-                        color: genes.map((g) =>
-                            highlightGeneSet.has(g.toLowerCase()) ? 1 : 0
-                        ),
+                        color:
+                            highlightGeneSet.size === 0
+                                ? significant.map((sig) =>
+                                      sig === "yes" ? 1 : 0
+                                  )
+                                : genes.map((g) =>
+                                      highlightGeneSet.has(g.toLowerCase())
+                                          ? 1
+                                          : 0
+                                  ),
                     },
                 };
             }),

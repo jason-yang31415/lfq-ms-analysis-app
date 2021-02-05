@@ -9,25 +9,37 @@ Modal.setAppElement("#root");
 
 function InputComparisonSelection({ conditions, onComparisonSelect }) {
     const [comparisonModalOpen, setComparisonModalOpen] = React.useState(false);
+
+    const [thresholdP, setThresholdP] = React.useState(0.05);
+    const [thresholdLogFC, setThresholdLogFC] = React.useState(1);
+    const [thresholdReps, setThresholdReps] = React.useState(2);
+
     /** @type {Map.<string, Set<string>} */
-    const comparisons = new Map();
+    const [comparisons, setComparisons] = React.useState({});
 
     const onComparisonChange = (conditionA, conditionB, selected) => {
+        let cpy = { ...comparisons };
         if (selected) {
-            if (!comparisons.has(conditionA))
-                comparisons.set(conditionA, new Set());
-            comparisons.get(conditionA).add(conditionB);
+            cpy[conditionA] = [...(cpy[conditionA] || [])];
+            if (!cpy[conditionA].includes(conditionB))
+                cpy[conditionA].push(conditionB);
         } else {
-            if (
-                comparisons.has(conditionA) &&
-                comparisons.get(conditionA).has(conditionB)
-            )
-                comparisons.get(conditionA).delete(conditionB);
+            if (conditionA in cpy && cpy[conditionA].includes(conditionB)) {
+                cpy[conditionA] = [...cpy[conditionA]].splice(
+                    cpy[conditionA].indexOf(conditionB),
+                    1
+                );
+            }
         }
+        setComparisons(cpy);
     };
 
     const onOKClick = () => {
-        onComparisonSelect(comparisons);
+        onComparisonSelect(comparisons, {
+            thresholdP,
+            thresholdLogFC,
+            thresholdReps,
+        });
         setComparisonModalOpen(false);
     };
 
@@ -92,6 +104,42 @@ function InputComparisonSelection({ conditions, onComparisonSelect }) {
                     </tbody>
                 </table>
 
+                <div>
+                    <label htmlFor="threshold-p">Significant p-value: </label>
+                    <input
+                        type="number"
+                        step="any"
+                        min={0}
+                        value={thresholdP}
+                        onChange={(e) => setThresholdP(e.target.value)}
+                        id="threshold-p"
+                    />
+                    <br />
+                    <label htmlFor="threshold-logfc">
+                        Significant log fold change:{" "}
+                    </label>
+                    <input
+                        type="number"
+                        step="any"
+                        min={0}
+                        value={thresholdLogFC}
+                        onChange={(e) => setThresholdLogFC(e.target.value)}
+                        id="threshold-logfc"
+                    />
+                    <br />
+                    <label htmlFor="threshold-reps">
+                        Significant number of replicates:{" "}
+                    </label>
+                    <input
+                        type="number"
+                        step={1}
+                        min={0}
+                        value={thresholdReps}
+                        onChange={(e) => setThresholdReps(e.target.value)}
+                        id="threshold-reps"
+                    />
+                </div>
+
                 <div id="input-comparison-modal-foot">
                     <button onClick={onOKClick}>OK</button>
                 </div>
@@ -108,15 +156,8 @@ export default connect(
     },
     (dispatch) => {
         return {
-            onComparisonSelect: (comparisons) => {
-                const comparisonsObj = Array.from(comparisons.keys()).reduce(
-                    (obj, condition) =>
-                        Object.assign(obj, {
-                            [condition]: Array.from(comparisons.get(condition)),
-                        }),
-                    {}
-                );
-                dispatch(onComparisonsSelect(comparisonsObj));
+            onComparisonSelect: (comparisons, thresholds) => {
+                dispatch(onComparisonsSelect(comparisons, thresholds));
             },
         };
     }
