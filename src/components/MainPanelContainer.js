@@ -3,36 +3,40 @@ import Plot from "react-plotly.js";
 import { connect } from "react-redux";
 import { makePlotlyDataLayout } from "../Figures";
 
-function MainPanelContainer({ id, figureOptions }) {
-    const [plot, setPlot] = React.useState({
-        data: [],
-        layout: {
-            autosize: true,
-        },
-    });
+import { ready, py } from "../PyAnalysis";
+import initFigure from "../python/init_figure.py";
 
-    React.useEffect(async () => {
-        if (figureOptions) setPlot(await makePlotlyDataLayout(figureOptions));
-    }, [figureOptions]);
+class MainPanelContainer extends React.Component {
+    constructor() {
+        super();
+        this.state = {
+            content: "Loading..",
+        };
+    }
 
-    if (plot) {
+    componentDidMount() {
+        ready
+            .then(() => fetch(initFigure))
+            .then((req) => req.text())
+            .then((src) => py().runPythonAsync(src))
+            .then(() => {
+                this.setState({
+                    content: null,
+                });
+            });
+    }
+
+    render() {
+        // TODO
+        const { id, figureOptions } = this.props;
+
         return (
-            <div id={id} className="main-container">
-                <Plot
-                    className="main-plot"
-                    data={plot.data}
-                    layout={plot.layout}
-                    useResizeHandler
-                    style={{
-                        width: "100%",
-                        height: "100%",
-                    }}
-                    divId="mainpanel-figure"
-                />
-            </div>
+            <>
+                {this.state.content}
+                <div id="figure-div"></div>
+            </>
         );
     }
-    return "loading...";
 }
 
 export default connect((state) => {
