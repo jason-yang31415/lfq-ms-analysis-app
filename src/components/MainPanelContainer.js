@@ -10,14 +10,14 @@ class MainPanelContainer extends React.Component {
     constructor() {
         super();
         this.state = {
-            content: "Loading..",
+            content: "Loading...",
         };
     }
 
     componentDidMount() {
         ready
             .then(() => fetch(initFigure))
-            .then((req) => req.text())
+            .then((res) => res.text())
             .then((src) => py().runPythonAsync(src))
             .then(() => {
                 this.setState({

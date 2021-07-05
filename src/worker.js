@@ -1,9 +1,36 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-restricted-globals */
+
 import { expose } from "comlink";
 import exceljs from "exceljs";
 
 import { readMaxQuant } from "./analysis/DataPreparation";
 import currentExperiment from "./analysis";
 import MSExperiment from "./analysis/MSExperiment";
+
+import initWorker from "./python/init_worker.py";
+
+importScripts("https://cdn.jsdelivr.net/pyodide/v0.17.0/full/pyodide.js");
+const PYODIDE_INDEX_URL = "https://cdn.jsdelivr.net/pyodide/v0.17.0/full/";
+
+function initializePython() {
+    return loadPyodide({
+        indexURL: PYODIDE_INDEX_URL,
+    })
+        .then(() =>
+            self.pyodide.loadPackage([
+                "numpy",
+                "pandas",
+                "scipy",
+                "statsmodels",
+            ])
+        )
+        .then(() => fetch(initWorker))
+        .then((res) => res.text())
+        .then((src) => self.pyodide.runPythonAsync(src));
+}
+
+const ready = initializePython();
 
 /**
  * Begin analysis after file is uploaded by user.
