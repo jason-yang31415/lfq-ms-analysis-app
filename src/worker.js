@@ -32,21 +32,29 @@ function initializePython() {
 
 const ready = initializePython();
 
-/**
- * Begin analysis after file is uploaded by user.
- *  - Parse data as MaxQuant output
- *  - Remove potential contaminants and reverse sequences
- *  - Log transform LFQ intensities
- *  - remove completely missing entries and impute missing values
- * @param {File} file uploaded data file
- */
-function onDataUpload(arraybuffer) {
-    return readMaxQuant(new Blob([arraybuffer])).then(() => {
-        const experiment = currentExperiment();
-        experiment.removeContaminants();
-        experiment.logTransform();
-        experiment.removeAllNaN();
-    });
+function asyncRun(python, data) {
+    for (const key of Object.keys(data)) self[key] = data[key];
+    return ready
+        .then(() => {
+            self.pyodide.globals.set("code_to_run", python);
+            return self.pyodide.runPythonAsync("run_code(code_to_run)");
+        })
+        .then((results) => {
+            return {
+                results: results,
+            };
+        })
+        .catch((err) => {
+            return {
+                error: err.message,
+            };
+        });
+}
+
+function get(name) {
+    return ready
+        .then(() => self.pyodide.runPythonAsync(`get("${name}")`))
+        .then((result) => result.toJs());
 }
 
 /**
@@ -170,7 +178,8 @@ function downloadData() {
 // expose worker thread analysis functions and getters to the main thread via
 // comlink
 expose({
-    onDataUpload,
+    asyncRun,
+    get,
     onReplicatesSelect,
     onImpute,
     onComparisonsSelect,

@@ -1,7 +1,8 @@
 import worker from "./AnalysisWorker";
-import { transfer } from "comlink";
 import { ACTIONS, createAction } from "./store/actions";
 import Plotly from "plotly.js";
+
+import { runPythonWorker, getPythonWorker } from "./PyAnalysis";
 
 /**
  * This file interfaces between UI and analysis. UI changes are handled on the
@@ -15,14 +16,29 @@ export function onDataUpload(file) {
         new Response(file)
             // wrap file blob in response to read data as array buffer
             .arrayBuffer()
-            // transfer array buffer to worker for processing and analysis
-            .then((ab) => {
-                return worker.onDataUpload(transfer(ab, [ab]));
-            })
-            // retrieve sample names
-            .then(() => {
-                return worker.getSamples();
-            })
+            // transfer array buffer to worker python instance to import as
+            // maxquant file
+            .then((ab) =>
+                runPythonWorker(
+                    `
+from js import raw_data
+import io
+
+data, samples = proteomics.io.import_maxquant(
+    io.BytesIO(raw_data.to_py()),
+    normalize=False
+)
+print(data)
+print(samples)
+                `,
+                    {
+                        raw_data: ab,
+                    },
+                    [ab]
+                )
+            )
+            // get "samples" variable from worker python instance
+            .then(() => getPythonWorker("samples"))
             // update UI with sample names
             .then((samples) => {
                 dispatch(createAction(ACTIONS.SET_INPUT_SAMPLES, samples));
