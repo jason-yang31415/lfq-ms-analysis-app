@@ -31,7 +31,7 @@ data, samples = proteomics.io.import_maxquant(
 )
 print(data)
 print(samples)
-                `,
+                    `,
                     {
                         raw_data: ab,
                     },
@@ -49,8 +49,19 @@ print(samples)
 
 export function onReplicatesSelect(conditions) {
     return (dispatch) => {
-        // transfer conditions object to worker for processing
-        worker.onReplicatesSelect(conditions).then(() => {
+        // set replicates dictionary on analysis thread
+        runPythonWorker(
+            `
+replicates = {
+${Object.entries(conditions)
+    .map(
+        ([condition, samples]) =>
+            `   "${condition}": [${samples.map((x) => `"${x}"`)}]`
+    )
+    .join(",\n")}
+}
+            `
+        ).then(() => {
             // update UI with condition names
             dispatch(
                 createAction(

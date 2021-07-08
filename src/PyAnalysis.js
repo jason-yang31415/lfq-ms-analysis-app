@@ -67,8 +67,9 @@ export function runPython(python) {
 }
 
 export function runPythonWorker(python, data, transfers) {
+    if (transfers) data = transfer(data, transfers);
     return worker
-        .asyncRun(python, transfer(data, transfers))
+        .asyncRun(python, data)
         .then(({ results, error }) => console.log(results, error));
 }
 

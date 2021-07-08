@@ -16,8 +16,9 @@ plt.plot([], [])
 f.canvas.show()
 
 
-def clear():
+def reset():
     plt.clf()
+    return plt.gcf(), plt.gca()
 
 
 def show():

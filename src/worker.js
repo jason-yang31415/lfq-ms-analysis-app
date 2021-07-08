@@ -33,7 +33,8 @@ function initializePython() {
 const ready = initializePython();
 
 function asyncRun(python, data) {
-    for (const key of Object.keys(data)) self[key] = data[key];
+    if (data != null)
+        for (const key of Object.keys(data)) self[key] = data[key];
     return ready
         .then(() => {
             self.pyodide.globals.set("code_to_run", python);

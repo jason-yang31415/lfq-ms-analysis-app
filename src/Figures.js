@@ -45,9 +45,8 @@ export async function makePlotlyDataLayout(options) {
 
 function makeLogViolin({ samples, conditions }) {
     let src = `
-clear()
+fig, ax = reset()
 data = await get_from_analysis("data")
-ax = plt.gca()
     `;
 
     if (samples != undefined && conditions == undefined) {
@@ -60,12 +59,28 @@ filtered = [i[j] for i, j in zip(x.T, mask.T)]
 ax.violinplot(filtered, vert=False)
 ax.set_yticks(range(1, len(samples) + 1))
 ax.set_yticklabels(samples)
+ax.set_ylabel("sample")
+ax.set_title("distribution of protein intensities by sample")
         `;
     } else if (samples == undefined && conditions != undefined) {
-        // TODO
+        src += `
+conditions = [${conditions.map((x) => `"${x}"`).join()}]
+replicates = await get_from_analysis("replicates")
+x = [data[lfq_col(replicates[c])].values.flatten() for c in conditions]
+mask = [~np.isnan(i) for i in x]
+filtered = [i[j] for i, j in zip(x, mask)]
+
+ax.violinplot(filtered, vert=False)
+ax.set_yticks(range(1, len(conditions) + 1))
+ax.set_yticklabels(conditions)
+ax.set_ylabel("condition")
+ax.set_title("distribution of protein intensities by condition")
+        `;
     }
 
     src += `
+ax.set_xlabel("$\\log_2$ intensity")
+ax.invert_yaxis()
 plt.tight_layout()
 show()
     `;
