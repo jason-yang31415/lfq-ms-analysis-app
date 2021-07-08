@@ -2,7 +2,8 @@ import worker from "./AnalysisWorker";
 import { ACTIONS, createAction } from "./store/actions";
 import Plotly from "plotly.js";
 
-import { runPythonWorker, getPythonWorker } from "./PyAnalysis";
+import { runPython, runPythonWorker, getPythonWorker } from "./PyAnalysis";
+import { makePlotCode } from "./Figures";
 
 /**
  * This file interfaces between UI and analysis. UI changes are handled on the
@@ -74,6 +75,13 @@ export function onComparisonsSelect(comparisons, thresholds) {
         worker.onComparisonsSelect(comparisons, thresholds).then(() => {
             dispatch(createAction(ACTIONS.SET_INPUT_COMPARISONS, comparisons));
         });
+    };
+}
+
+export function showPlot(figureOptions) {
+    return (dispatch) => {
+        let src = makePlotCode(figureOptions);
+        runPython(src);
     };
 }
 

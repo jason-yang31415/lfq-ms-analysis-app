@@ -28,7 +28,7 @@ class MainPanelContainer extends React.Component {
 
     render() {
         // TODO
-        const { id, figureOptions } = this.props;
+        // const { id, figureOptions } = this.props;
 
         return (
             <>
@@ -41,6 +41,6 @@ class MainPanelContainer extends React.Component {
 
 export default connect((state) => {
     return {
-        figureOptions: state.view.figureOptions,
+        // figureOptions: state.view.figureOptions,
     };
 }, null)(MainPanelContainer);

@@ -9,6 +9,14 @@ export const FIGURES = {
     P_VALUE_HISTOGRAM: "P_VALUE_HISTOGRAM",
 };
 
+export function makePlotCode(options) {
+    const { type } = options;
+    switch (type) {
+        case FIGURES.LOG_VIOLIN:
+            return makeLogViolin(options);
+    }
+}
+
 export async function makePlotlyDataLayout(options) {
     const { type } = options;
 
@@ -35,7 +43,36 @@ export async function makePlotlyDataLayout(options) {
     return ret;
 }
 
-async function makeLogViolin({ samples, conditions }) {
+function makeLogViolin({ samples, conditions }) {
+    let src = `
+clear()
+data = await get_from_analysis("data")
+ax = plt.gca()
+    `;
+
+    if (samples != undefined && conditions == undefined) {
+        src += `
+samples = [${samples.map((x) => `"${x}"`).join()}]
+x = data[lfq_col(samples)].values
+mask = ~np.isnan(x)
+filtered = [i[j] for i, j in zip(x.T, mask.T)]
+
+ax.violinplot(filtered, vert=False)
+ax.set_yticks(range(1, len(samples) + 1))
+ax.set_yticklabels(samples)
+        `;
+    } else if (samples == undefined && conditions != undefined) {
+        // TODO
+    }
+
+    src += `
+plt.tight_layout()
+show()
+    `;
+    return src;
+}
+
+/* async function makeLogViolin({ samples, conditions }) {
     const makeViolinTrace = (trace) => {
         return Object.assign(trace, {
             type: "violin",
@@ -106,7 +143,7 @@ async function makeLogViolin({ samples, conditions }) {
         },
     });
     return ret;
-}
+} */
 
 async function makePrePostImputationViolin({ samples, conditions }) {
     const makeViolinTrace = (trace) => {

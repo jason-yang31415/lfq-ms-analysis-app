@@ -15,4 +15,13 @@ f.canvas.create_root_element = create_root_element.__get__(f.canvas, f.canvas.__
 plt.plot([], [])
 f.canvas.show()
 
+
+def clear():
+    plt.clf()
+
+
+def show():
+    f.canvas.show()
+
+
 print("figure initialization complete!")

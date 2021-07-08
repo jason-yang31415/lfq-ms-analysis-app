@@ -51,9 +51,13 @@ function asyncRun(python, data) {
         });
 }
 
-function get(name) {
+function get(name, pickle) {
     return ready
-        .then(() => self.pyodide.runPythonAsync(`get("${name}")`))
+        .then(() => {
+            if (pickle)
+                return self.pyodide.runPythonAsync(`get_pickle("${name}")`);
+            return self.pyodide.runPythonAsync(`get("${name}")`);
+        })
         .then((result) => result.toJs());
 }
 

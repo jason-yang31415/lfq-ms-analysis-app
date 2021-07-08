@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import { FIGURES } from "../Figures";
-import { downloadData, saveFigure } from "../RunAnalysis";
+import { downloadData, saveFigure, showPlot } from "../RunAnalysis";
 import { ACTIONS, createAction } from "../store/actions";
 
 import FigureOptions from "./FigureOptions";
@@ -63,9 +63,10 @@ function ViewContainer({ id, onOptionsSet, onDownloadClick, onSavePlotClick }) {
 export default connect(null, (dispatch) => {
     return {
         onOptionsSet: (figureOptions) => {
-            dispatch(
-                createAction(ACTIONS.SET_VIEW_FIGURE_OPTIONS, figureOptions)
-            );
+            dispatch(showPlot(figureOptions));
+            // dispatch(
+            //     createAction(ACTIONS.SET_VIEW_FIGURE_OPTIONS, figureOptions)
+            // );
         },
         onDownloadClick: () => {
             dispatch(downloadData());
