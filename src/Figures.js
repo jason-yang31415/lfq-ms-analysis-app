@@ -14,6 +14,8 @@ export function makePlotCode(options) {
     switch (type) {
         case FIGURES.LOG_VIOLIN:
             return makeLogViolin(options);
+        case FIGURES.PRE_POST_IMPUTATION_VIOLIN:
+            return makePrePostImputationViolin(options);
     }
 }
 
@@ -53,8 +55,7 @@ data = await get_from_analysis("data")
         src += `
 samples = [${samples.map((x) => `"${x}"`).join()}]
 x = data[lfq_col(samples)].values
-mask = ~np.isnan(x)
-filtered = [i[j] for i, j in zip(x.T, mask.T)]
+filtered = [i[j] for i, j in zip(x.T, (~np.isnan(x)).T)]
 
 ax.violinplot(filtered, vert=False)
 ax.set_yticks(range(1, len(samples) + 1))
@@ -67,8 +68,7 @@ ax.set_title("distribution of protein intensities by sample")
 conditions = [${conditions.map((x) => `"${x}"`).join()}]
 replicates = await get_from_analysis("replicates")
 x = [data[lfq_col(replicates[c])].values.flatten() for c in conditions]
-mask = [~np.isnan(i) for i in x]
-filtered = [i[j] for i, j in zip(x, mask)]
+filtered = [i[~np.isnan(i)] for i in x]
 
 ax.violinplot(filtered, vert=False)
 ax.set_yticks(range(1, len(conditions) + 1))
@@ -160,7 +160,72 @@ show()
     return ret;
 } */
 
-async function makePrePostImputationViolin({ samples, conditions }) {
+function makePrePostImputationViolin({ samples, conditions }) {
+    let src = `
+fig, ax = reset()
+data = await get_from_analysis("data_normalized")
+imputed = (await get_from_analysis("data_imputed"))[0]
+    `;
+
+    if (samples != undefined && conditions == undefined) {
+        src += `
+samples = [${samples.map((x) => `"${x}"`).join()}]
+x = data[lfq_col(samples)].values
+x_filtered = [i[j] for i, j in zip(x.T, (~np.isnan(x)).T)]
+y = imputed[lfq_col(samples)].values
+y_filtered = [i[j] for i, j in zip(y.T, (~np.isnan(y)).T)]
+
+v1 = ax.violinplot(x_filtered, vert=False)
+for b in v1["bodies"]:
+    center = np.mean(b.get_paths()[0].vertices[:,1])
+    b.get_paths()[0].vertices[:, 1] = np.clip(b.get_paths()[0].vertices[:,1], -np.inf, center)
+
+v2 = ax.violinplot(y_filtered, vert=False)
+for b in v2["bodies"]:
+    center = np.mean(b.get_paths()[0].vertices[:,1])
+    b.get_paths()[0].vertices[:, 1] = np.clip(b.get_paths()[0].vertices[:,1], center, np.inf)
+
+ax.set_yticks(range(1, len(samples) + 1))
+ax.set_yticklabels(samples)
+ax.set_ylabel("sample")
+ax.set_title("distribution of protein intensities by sample")
+        `;
+    } else if (samples == undefined && conditions != undefined) {
+        src += `
+conditions = [${conditions.map((x) => `"${x}"`).join()}]
+replicates = await get_from_analysis("replicates")
+x = [data[lfq_col(replicates[c])].values.flatten() for c in conditions]
+x_filtered = [i[~np.isnan(i)] for i in x]
+y = [imputed[lfq_col(replicates[c])].values.flatten() for c in conditions]
+y_filtered = [i[~np.isnan(i)] for i in y]
+
+v1 = ax.violinplot(x_filtered, vert=False)
+for b in v1["bodies"]:
+    center = np.mean(b.get_paths()[0].vertices[:,1])
+    b.get_paths()[0].vertices[:, 1] = np.clip(b.get_paths()[0].vertices[:,1], -np.inf, center)
+
+v2 = ax.violinplot(y_filtered, vert=False)
+for b in v2["bodies"]:
+    center = np.mean(b.get_paths()[0].vertices[:,1])
+    b.get_paths()[0].vertices[:, 1] = np.clip(b.get_paths()[0].vertices[:,1], center, np.inf)
+
+ax.set_yticks(range(1, len(conditions) + 1))
+ax.set_yticklabels(conditions)
+ax.set_ylabel("condition")
+ax.set_title("distribution of protein intensities by condition")
+        `;
+    }
+
+    src += `
+ax.set_xlabel("$\\log_2$ intensity")
+ax.invert_yaxis()
+plt.tight_layout()
+show()
+    `;
+    return src;
+}
+
+/* async function makePrePostImputationViolin({ samples, conditions }) {
     const makeViolinTrace = (trace) => {
         return Object.assign(trace, {
             type: "violin",
@@ -285,7 +350,7 @@ async function makePrePostImputationViolin({ samples, conditions }) {
         },
     });
     return ret;
-}
+} */
 
 async function makePrePostImputationBoxplot({ samples, conditions }) {
     const makeBoxplotTrace = (trace) => {

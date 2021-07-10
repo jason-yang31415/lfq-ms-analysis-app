@@ -4,6 +4,7 @@ import Plotly from "plotly.js";
 
 import { runPython, runPythonWorker, getPythonWorker } from "./PyAnalysis";
 import { makePlotCode } from "./Figures";
+import MSExperiment from "./analysis/MSExperiment";
 
 /**
  * This file interfaces between UI and analysis. UI changes are handled on the
@@ -75,8 +76,55 @@ ${Object.entries(conditions)
 
 export function onImpute(options) {
     return (dispatch) => {
-        // transfer options to worker and do processing/imputation
-        worker.onImpute(options);
+        const { normalize, method } = options;
+        let src = "";
+        if (normalize)
+            src += `
+data_normalized = data.copy()
+max_median = data[lfq_col(samples)].median(axis=0).max()
+data_normalized[lfq_col(samples)] = data_normalized[lfq_col(samples)].apply(
+    lambda col: col * max_median / col.median(), axis=0
+)
+            `;
+        else
+            src += `
+data_normalized = data.copy()
+            `;
+
+        src += `
+data_imputed = []
+for i in range(1):
+    df = data_normalized.copy()
+    for cond, reps in replicates.items():
+        `;
+        switch (method) {
+            case MSExperiment.IMPUTATION_METHODS.METHOD_31:
+                src += `
+        df[lfq_col(reps)] = proteomics.imputation.impute_3_1(df[lfq_col(reps)])
+                `;
+                break;
+            case MSExperiment.IMPUTATION_METHODS.METHOD_46:
+                src += `
+        df[lfq_col(reps)] = proteomics.imputation.impute_twostep(
+            proteomics.imputation.impute_4_6(df[lfq_col(reps)]),
+            proteomics.imputation.impute_3_1(df[lfq_col(reps)])
+        )
+                `;
+                break;
+            case MSExperiment.IMPUTATION_METHODS.METHOD_47:
+                src += `
+        df[lfq_col(reps)] = proteomics.imputation.impute_twostep(
+            proteomics.imputation.impute_4_6(df[lfq_col(reps)], n_rep=1),
+            proteomics.imputation.impute_3_1(df[lfq_col(reps)])
+        )
+                `;
+                break;
+        }
+
+        src += `
+        data_imputed.append(df)
+        `;
+        runPythonWorker(src);
     };
 }
 

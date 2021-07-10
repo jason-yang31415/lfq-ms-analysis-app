@@ -37,6 +37,8 @@ run_code(
 import proteomics
 import numpy as np
 import pandas as pd
+
+lfq_col = proteomics.util.lfq_col
 """
 )
 
