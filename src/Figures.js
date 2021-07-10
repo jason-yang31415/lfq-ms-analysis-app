@@ -16,6 +16,8 @@ export function makePlotCode(options) {
             return makeLogViolin(options);
         case FIGURES.PRE_POST_IMPUTATION_VIOLIN:
             return makePrePostImputationViolin(options);
+        case FIGURES.VOLCANO:
+            return makeVolcanoPlot(options);
     }
 }
 
@@ -476,7 +478,22 @@ async function makePrePostImputationBoxplot({ samples, conditions }) {
     return ret;
 }
 
-async function makeVolcanoPlot({ comparisons, highlightGenes }) {
+function makeVolcanoPlot({ comparisons, highlightGenes }) {
+    // TODO highlight genes
+    return `
+fig, ax = reset()
+data = await get_from_analysis("data_comparisons")
+table = data[("${comparisons[0]}", "${comparisons[1]}")]
+ax.scatter(table["log FC"], -np.log10(table["p adjusted"]), alpha=0.2)
+ax.set_xlabel("$\\log_2$ fold change")
+ax.set_ylabel("$-\\log_{10} \\; p_{adjusted}$")
+ax.set_title("${comparisons[1]} vs. ${comparisons[0]}")
+plt.tight_layout()
+show()
+    `;
+}
+
+/* async function makeVolcanoPlot({ comparisons, highlightGenes }) {
     if (!comparisons) return { data: [], layout: {} };
     const highlightGeneSet = new Set(
         (highlightGenes || []).map((g) => g.toLowerCase())
@@ -520,7 +537,7 @@ async function makeVolcanoPlot({ comparisons, highlightGenes }) {
             },
         },
     };
-}
+} */
 
 async function makePValueHistogram({ comparisons }) {
     if (!comparisons) return { data: [], layout: {} };

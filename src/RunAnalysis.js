@@ -57,7 +57,7 @@ replicates = {
 ${Object.entries(conditions)
     .map(
         ([condition, samples]) =>
-            `   "${condition}": [${samples.map((x) => `"${x}"`)}]`
+            `    "${condition}": [${samples.map((x) => `"${x}"`)}]`
     )
     .join(",\n")}
 }
@@ -130,8 +130,25 @@ for i in range(1):
 
 export function onComparisonsSelect(comparisons, thresholds) {
     return (dispatch) => {
-        // transfer comparisons object to worker for processing
-        worker.onComparisonsSelect(comparisons, thresholds).then(() => {
+        let src = `
+comparisons = [
+${Object.entries(comparisons)
+    .map(([a, listb]) => listb.map((b) => `    ("${a}", "${b}"),`))
+    .flat()
+    .join("\n")}
+]
+
+data_comparisons = proteomics.imputation.compare(
+    comparisons, 
+    replicates, 
+    data_normalized,
+    data_imputed,
+    sig_p=${thresholds.thresholdP},
+    sig_fc=${thresholds.thresholdLogFC},
+    sig_reps=${thresholds.thresholdReps}
+)
+        `;
+        runPythonWorker(src).then(() => {
             dispatch(createAction(ACTIONS.SET_INPUT_COMPARISONS, comparisons));
         });
     };
