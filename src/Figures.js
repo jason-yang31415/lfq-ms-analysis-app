@@ -18,6 +18,8 @@ export function makePlotCode(options) {
             return makePrePostImputationViolin(options);
         case FIGURES.VOLCANO:
             return makeVolcanoPlot(options);
+        case FIGURES.P_VALUE_HISTOGRAM:
+            return makePValueHistogram(options);
     }
 }
 
@@ -548,7 +550,24 @@ show()
     };
 } */
 
-async function makePValueHistogram({ comparisons }) {
+function makePValueHistogram({ comparisons }) {
+    return `
+fig, ax = reset()
+data = await get_from_analysis("data_comparisons")
+table = data[("${comparisons[0]}", "${comparisons[1]}")]
+
+ax.hist(table["p"], bins=40, alpha=0.5, label="$p$-value")
+ax.hist(table["p adjusted"], bins=40, alpha=0.5, label="adjusted $p$-value")
+ax.set_xlabel("$p$")
+ax.set_ylabel("Count")
+ax.set_title("distribution of $p$-values for ${comparisons[1]} vs. ${comparisons[0]}")
+plt.legend()
+plt.tight_layout()
+show()
+    `;
+}
+
+/* async function makePValueHistogram({ comparisons }) {
     if (!comparisons) return { data: [], layout: {} };
     return {
         data: [
@@ -589,4 +608,4 @@ async function makePValueHistogram({ comparisons }) {
             },
         },
     };
-}
+} */
