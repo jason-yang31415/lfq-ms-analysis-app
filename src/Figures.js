@@ -479,12 +479,21 @@ async function makePrePostImputationBoxplot({ samples, conditions }) {
 }
 
 function makeVolcanoPlot({ comparisons, highlightGenes }) {
-    // TODO highlight genes
     return `
 fig, ax = reset()
 data = await get_from_analysis("data_comparisons")
 table = data[("${comparisons[0]}", "${comparisons[1]}")]
-ax.scatter(table["log FC"], -np.log10(table["p adjusted"]), alpha=0.2)
+
+genes = [${(highlightGenes || []).map((g) => `"${g}"`).join(",\n    ")}]
+
+proteomics.plotting.volcano(table, [
+    (set(table.index), ${
+        highlightGenes != null && highlightGenes.length > 0
+            ? `{"color": "gray", "alpha": 0.1}`
+            : `{"alpha": 0.2}`
+    }, None),
+    (set(genes), {"color": "tab:blue", "alpha": 0.6}, "gene")
+], ax=ax)
 ax.set_xlabel("$\\log_2$ fold change")
 ax.set_ylabel("$-\\log_{10} \\; p_{adjusted}$")
 ax.set_title("${comparisons[1]} vs. ${comparisons[0]}")
