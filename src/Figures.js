@@ -223,6 +223,7 @@ ax.set_title("distribution of protein intensities by condition")
     src += `
 ax.set_xlabel("$\\log_2$ intensity")
 ax.invert_yaxis()
+ax.legend([v1["bodies"][0], v2["bodies"][0]], ["pre-imputation", "post-imputation"])
 plt.tight_layout()
 show()
     `;
