@@ -489,16 +489,14 @@ table = data[("${comparisons[0]}", "${comparisons[1]}")]
 genes = [${(highlightGenes || []).map((g) => `"${g}"`).join(",\n    ")}]
 
 proteomics.plotting.volcano(table, [
-    (set(table.index), ${
-        highlightGenes != null && highlightGenes.length > 0
-            ? `{"color": "gray", "alpha": 0.1}`
-            : `{"alpha": 0.2}`
-    }, None),
-    (set(genes), {"color": "tab:blue", "alpha": 0.6}, "gene")
+    (set(table.index), {"color": "gray", "alpha": 0.1, "label": "_nolegend_"}, None),
+    (set(table[table["significant"]].index), {"color": "darkred", "alpha": 0.1, "label": "significant"}, None),
+    (set(genes), {"color": "tab:blue", "alpha": 0.8, "label": "_nolegend_"}, "gene")
 ], ax=ax)
 ax.set_xlabel("$\\log_2$ fold change")
 ax.set_ylabel("$-\\log_{10} \\; p_{adjusted}$")
 ax.set_title("${comparisons[1]} vs. ${comparisons[0]}")
+ax.legend()
 plt.tight_layout()
 show()
     `;
@@ -561,7 +559,7 @@ ax.hist(table["p adjusted"], bins=40, alpha=0.5, label="adjusted $p$-value")
 ax.set_xlabel("$p$")
 ax.set_ylabel("Count")
 ax.set_title("distribution of $p$-values for ${comparisons[1]} vs. ${comparisons[0]}")
-plt.legend()
+ax.legend()
 plt.tight_layout()
 show()
     `;
