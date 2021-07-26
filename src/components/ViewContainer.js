@@ -64,9 +64,9 @@ export default connect(null, (dispatch) => {
     return {
         onOptionsSet: (figureOptions) => {
             dispatch(showPlot(figureOptions));
-            // dispatch(
-            //     createAction(ACTIONS.SET_VIEW_FIGURE_OPTIONS, figureOptions)
-            // );
+            dispatch(
+                createAction(ACTIONS.SET_VIEW_FIGURE_OPTIONS, figureOptions)
+            );
         },
         onDownloadClick: () => {
             dispatch(downloadData());

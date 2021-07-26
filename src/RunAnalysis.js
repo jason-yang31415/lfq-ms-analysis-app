@@ -161,6 +161,21 @@ export function showPlot(figureOptions) {
     };
 }
 
+export function getComparisonTable(comparison) {
+    // convert dataframe to list of dicts
+    return runPythonWorker(`
+table = data_comparisons[("${comparison[0]}", "${comparison[1]}")].to_dict("records")
+        `)
+        .then(() => {
+            // retrieve comparison data from worker python instance
+            return getPythonWorker("table");
+        })
+        .then((table) => {
+            // pyodide converts dict to map; convert maps to objects
+            return table.map((row) => Object.fromEntries(row));
+        });
+}
+
 export function downloadData() {
     return (dispatch) => {
         // get bytes to save as excel file from worker

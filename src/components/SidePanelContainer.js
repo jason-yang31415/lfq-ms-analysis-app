@@ -3,15 +3,17 @@ import { connect } from "react-redux";
 import worker from "../AnalysisWorker";
 
 import MUIDataTable from "mui-datatables";
+import { getComparisonTable } from "../RunAnalysis";
 
 function SidePanelContainer({ id, samples, figureOptions }) {
     const [data, setData] = React.useState();
 
     React.useEffect(async () => {
-        if (figureOptions.comparisons)
-            setData(
-                await worker.getComparisonsTable(figureOptions.comparisons)
-            );
+        if (figureOptions.comparisons) {
+            getComparisonTable(figureOptions.comparisons).then((table) => {
+                setData(table);
+            });
+        }
     }, [figureOptions.comparisons]);
 
     return (
