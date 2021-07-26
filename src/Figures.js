@@ -493,7 +493,8 @@ proteomics.plotting.volcano(table, [
     (set(table.index), {"color": "gray", "alpha": 0.1, "label": "_nolegend_"}, None),
     (set(table[table["significant"]].index), {"color": "darkred", "alpha": 0.1, "label": "significant"}, None),
     (set(genes), {"color": "tab:blue", "alpha": 0.8, "label": "_nolegend_"}, "gene")
-], ax=ax)
+], ax=ax, interactive=True)
+
 ax.set_xlabel("$\\log_2$ fold change")
 ax.set_ylabel("$-\\log_{10} \\; p_{adjusted}$")
 ax.set_title("${comparisons[1]} vs. ${comparisons[0]}")
