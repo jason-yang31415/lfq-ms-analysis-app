@@ -59,7 +59,11 @@ function get(name, pickle) {
                 return self.pyodide.runPythonAsync(`get_pickle("${name}")`);
             return self.pyodide.runPythonAsync(`get("${name}")`);
         })
-        .then((result) => result.toJs());
+        .then((result) => {
+            let js = result.toJs();
+            result.destroy();
+            return js;
+        });
 }
 
 /**
