@@ -44,6 +44,7 @@ function SidePanelContainer({ id, samples, figureOptions, replLog }) {
                     <div className="repl-output">
                         {replLog.map((log) => (
                             <ReplOutput
+                                key={log.index}
                                 index={log.index}
                                 context={log.context}
                                 code={log.code}
