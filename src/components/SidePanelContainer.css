@@ -1,0 +1,60 @@
+.sidepanel-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidepanel-top {
+    flex: 1 1 auto;
+}
+
+.sidepanel-bottom {
+    flex: 0 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.tab {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    font-size: 80%;
+}
+
+.tab:hover {
+    background-color: #eee;
+}
+
+.tab-selected {
+    background-color: #aaa;
+}
+
+.repl {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.repl-output {
+    flex: 1 1 1px;
+    overflow-y: auto;
+}
+
+.repl-input {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: row;
+}
+
+.repl-inputbox {
+    flex: 1 1 auto;
+    resize: none;
+}
+
+.repl-inputrun {
+    display: flex;
+    flex-direction: column;
+}
+
+.repl-inputrun > * {
+    flex-grow: 1;
+}

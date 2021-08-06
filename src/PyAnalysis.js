@@ -1,5 +1,7 @@
 import worker from "./AnalysisWorker";
 import { transfer } from "comlink";
+import store from "./store/store";
+import { ACTIONS, createAction } from "./store/actions";
 
 const PYODIDE_INDEX_URL = "https://cdn.jsdelivr.net/pyodide/v0.17.0/full/";
 
@@ -64,16 +66,36 @@ export function py() {
 }
 
 export function runPython(python) {
-    return ready.then(() => py().runPythonAsync(python));
+    return ready
+        .then(() => py().runPythonAsync(python))
+        .then((results) => {
+            appendReplLog("figure", python, results, null);
+        })
+        .catch((err) => {
+            appendReplLog("figure", python, null, err);
+        });
 }
 
 export function runPythonWorker(python, data, transfers) {
     if (transfers) data = transfer(data, transfers);
     return worker
         .asyncRun(python, data)
-        .then(({ results, error }) => console.log(results, error));
+        .then(({ results, error }) =>
+            appendReplLog("worker", python, results, error)
+        );
 }
 
 export function getPythonWorker(name, pickle = false) {
     return worker.get(name, pickle);
+}
+
+function appendReplLog(context, code, results, error) {
+    store.dispatch(
+        createAction(ACTIONS.APPEND_REPL_LOG, {
+            context,
+            code: code.trim(),
+            results,
+            error,
+        })
+    );
 }

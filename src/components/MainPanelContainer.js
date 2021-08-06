@@ -27,14 +27,13 @@ class MainPanelContainer extends React.Component {
     }
 
     render() {
-        // TODO
-        // const { id, figureOptions } = this.props;
+        const { id } = this.props;
 
         return (
-            <>
+            <div id={id}>
                 {this.state.content}
                 <div id="figure-div"></div>
-            </>
+            </div>
         );
     }
 }
