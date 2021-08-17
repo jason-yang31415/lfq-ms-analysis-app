@@ -69,10 +69,15 @@ export function runPython(python) {
     return ready
         .then(() => py().runPythonAsync(python))
         .then((results) => {
-            appendReplLog("figure", python, results, null);
+            appendReplLog(
+                "figure",
+                python,
+                results ? results.toString() : null,
+                null
+            );
         })
         .catch((err) => {
-            appendReplLog("figure", python, null, err);
+            appendReplLog("figure", python, null, err ? err.toString() : null);
         });
 }
 
