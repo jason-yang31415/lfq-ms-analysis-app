@@ -189,14 +189,3 @@ export function downloadData() {
         });
     };
 }
-
-export function saveFigure() {
-    return (dispatch) => {
-        Plotly.downloadImage("mainpanel-figure", {
-            format: "png",
-            width: 1024,
-            height: 1024,
-            filename: "figure",
-        });
-    };
-}
