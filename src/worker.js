@@ -1,3 +1,6 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-restricted-globals */
+
 import { expose } from "comlink";
 import exceljs from "exceljs";
 
@@ -5,21 +8,62 @@ import { readMaxQuant } from "./analysis/DataPreparation";
 import currentExperiment from "./analysis";
 import MSExperiment from "./analysis/MSExperiment";
 
-/**
- * Begin analysis after file is uploaded by user.
- *  - Parse data as MaxQuant output
- *  - Remove potential contaminants and reverse sequences
- *  - Log transform LFQ intensities
- *  - remove completely missing entries and impute missing values
- * @param {File} file uploaded data file
- */
-function onDataUpload(arraybuffer) {
-    return readMaxQuant(new Blob([arraybuffer])).then(() => {
-        const experiment = currentExperiment();
-        experiment.removeContaminants();
-        experiment.logTransform();
-        experiment.removeAllNaN();
-    });
+import initWorker from "./python/init_worker.py";
+
+importScripts("https://cdn.jsdelivr.net/pyodide/v0.17.0/full/pyodide.js");
+const PYODIDE_INDEX_URL = "https://cdn.jsdelivr.net/pyodide/v0.17.0/full/";
+
+function initializePython() {
+    return loadPyodide({
+        indexURL: PYODIDE_INDEX_URL,
+    })
+        .then(() =>
+            self.pyodide.loadPackage([
+                "numpy",
+                "pandas",
+                "scipy",
+                "statsmodels",
+            ])
+        )
+        .then(() => fetch(initWorker))
+        .then((res) => res.text())
+        .then((src) => self.pyodide.runPythonAsync(src));
+}
+
+const ready = initializePython();
+
+function asyncRun(python, data) {
+    if (data != null)
+        for (const key of Object.keys(data)) self[key] = data[key];
+    return ready
+        .then(() => {
+            self.pyodide.globals.set("code_to_run", python);
+            return self.pyodide.runPythonAsync("run_code(code_to_run)");
+        })
+        .then((results) => {
+            return {
+                results: results,
+            };
+        })
+        .catch((err) => {
+            return {
+                error: err.message,
+            };
+        });
+}
+
+function get(name, pickle) {
+    return ready
+        .then(() => {
+            if (pickle)
+                return self.pyodide.runPythonAsync(`get_pickle("${name}")`);
+            return self.pyodide.runPythonAsync(`get("${name}")`);
+        })
+        .then((result) => {
+            let js = result.toJs();
+            result.destroy();
+            return js;
+        });
 }
 
 /**
@@ -143,7 +187,8 @@ function downloadData() {
 // expose worker thread analysis functions and getters to the main thread via
 // comlink
 expose({
-    onDataUpload,
+    asyncRun,
+    get,
     onReplicatesSelect,
     onImpute,
     onComparisonsSelect,

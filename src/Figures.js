@@ -9,6 +9,20 @@ export const FIGURES = {
     P_VALUE_HISTOGRAM: "P_VALUE_HISTOGRAM",
 };
 
+export function makePlotCode(options) {
+    const { type } = options;
+    switch (type) {
+        case FIGURES.LOG_VIOLIN:
+            return makeLogViolin(options);
+        case FIGURES.PRE_POST_IMPUTATION_VIOLIN:
+            return makePrePostImputationViolin(options);
+        case FIGURES.VOLCANO:
+            return makeVolcanoPlot(options);
+        case FIGURES.P_VALUE_HISTOGRAM:
+            return makePValueHistogram(options);
+    }
+}
+
 export async function makePlotlyDataLayout(options) {
     const { type } = options;
 
@@ -35,7 +49,49 @@ export async function makePlotlyDataLayout(options) {
     return ret;
 }
 
-async function makeLogViolin({ samples, conditions }) {
+function makeLogViolin({ samples, conditions }) {
+    let src = `
+fig, ax = reset()
+data = await get_from_analysis("data")
+    `;
+
+    if (samples != undefined && conditions == undefined) {
+        src += `
+samples = [${samples.map((x) => `"${x}"`).join()}]
+x = data[lfq_col(samples)].values
+filtered = [i[j] for i, j in zip(x.T, (~np.isnan(x)).T)]
+
+ax.violinplot(filtered, vert=False)
+ax.set_yticks(range(1, len(samples) + 1))
+ax.set_yticklabels(samples)
+ax.set_ylabel("sample")
+ax.set_title("distribution of protein intensities by sample")
+        `;
+    } else if (samples == undefined && conditions != undefined) {
+        src += `
+conditions = [${conditions.map((x) => `"${x}"`).join()}]
+replicates = await get_from_analysis("replicates")
+x = [data[lfq_col(replicates[c])].values.flatten() for c in conditions]
+filtered = [i[~np.isnan(i)] for i in x]
+
+ax.violinplot(filtered, vert=False)
+ax.set_yticks(range(1, len(conditions) + 1))
+ax.set_yticklabels(conditions)
+ax.set_ylabel("condition")
+ax.set_title("distribution of protein intensities by condition")
+        `;
+    }
+
+    src += `
+ax.set_xlabel("$\\log_2$ intensity")
+ax.invert_yaxis()
+plt.tight_layout()
+show()
+    `;
+    return src;
+}
+
+/* async function makeLogViolin({ samples, conditions }) {
     const makeViolinTrace = (trace) => {
         return Object.assign(trace, {
             type: "violin",
@@ -106,9 +162,75 @@ async function makeLogViolin({ samples, conditions }) {
         },
     });
     return ret;
+} */
+
+function makePrePostImputationViolin({ samples, conditions }) {
+    let src = `
+fig, ax = reset()
+data = await get_from_analysis("data_normalized")
+imputed = (await get_from_analysis("data_imputed"))[0]
+    `;
+
+    if (samples != undefined && conditions == undefined) {
+        src += `
+samples = [${samples.map((x) => `"${x}"`).join()}]
+x = data[lfq_col(samples)].values
+x_filtered = [i[j] for i, j in zip(x.T, (~np.isnan(x)).T)]
+y = imputed[lfq_col(samples)].values
+y_filtered = [i[j] for i, j in zip(y.T, (~np.isnan(y)).T)]
+
+v1 = ax.violinplot(x_filtered, vert=False)
+for b in v1["bodies"]:
+    center = np.mean(b.get_paths()[0].vertices[:,1])
+    b.get_paths()[0].vertices[:, 1] = np.clip(b.get_paths()[0].vertices[:,1], -np.inf, center)
+
+v2 = ax.violinplot(y_filtered, vert=False)
+for b in v2["bodies"]:
+    center = np.mean(b.get_paths()[0].vertices[:,1])
+    b.get_paths()[0].vertices[:, 1] = np.clip(b.get_paths()[0].vertices[:,1], center, np.inf)
+
+ax.set_yticks(range(1, len(samples) + 1))
+ax.set_yticklabels(samples)
+ax.set_ylabel("sample")
+ax.set_title("distribution of protein intensities by sample")
+        `;
+    } else if (samples == undefined && conditions != undefined) {
+        src += `
+conditions = [${conditions.map((x) => `"${x}"`).join()}]
+replicates = await get_from_analysis("replicates")
+x = [data[lfq_col(replicates[c])].values.flatten() for c in conditions]
+x_filtered = [i[~np.isnan(i)] for i in x]
+y = [imputed[lfq_col(replicates[c])].values.flatten() for c in conditions]
+y_filtered = [i[~np.isnan(i)] for i in y]
+
+v1 = ax.violinplot(x_filtered, vert=False)
+for b in v1["bodies"]:
+    center = np.mean(b.get_paths()[0].vertices[:,1])
+    b.get_paths()[0].vertices[:, 1] = np.clip(b.get_paths()[0].vertices[:,1], -np.inf, center)
+
+v2 = ax.violinplot(y_filtered, vert=False)
+for b in v2["bodies"]:
+    center = np.mean(b.get_paths()[0].vertices[:,1])
+    b.get_paths()[0].vertices[:, 1] = np.clip(b.get_paths()[0].vertices[:,1], center, np.inf)
+
+ax.set_yticks(range(1, len(conditions) + 1))
+ax.set_yticklabels(conditions)
+ax.set_ylabel("condition")
+ax.set_title("distribution of protein intensities by condition")
+        `;
+    }
+
+    src += `
+ax.set_xlabel("$\\log_2$ intensity")
+ax.invert_yaxis()
+ax.legend([v1["bodies"][0], v2["bodies"][0]], ["pre-imputation", "post-imputation"])
+plt.tight_layout()
+show()
+    `;
+    return src;
 }
 
-async function makePrePostImputationViolin({ samples, conditions }) {
+/* async function makePrePostImputationViolin({ samples, conditions }) {
     const makeViolinTrace = (trace) => {
         return Object.assign(trace, {
             type: "violin",
@@ -233,7 +355,7 @@ async function makePrePostImputationViolin({ samples, conditions }) {
         },
     });
     return ret;
-}
+} */
 
 async function makePrePostImputationBoxplot({ samples, conditions }) {
     const makeBoxplotTrace = (trace) => {
@@ -359,7 +481,30 @@ async function makePrePostImputationBoxplot({ samples, conditions }) {
     return ret;
 }
 
-async function makeVolcanoPlot({ comparisons, highlightGenes }) {
+function makeVolcanoPlot({ comparisons, highlightGenes }) {
+    return `
+fig, ax = reset()
+data = await get_from_analysis("data_comparisons")
+table = data[("${comparisons[0]}", "${comparisons[1]}")]
+
+genes = [${(highlightGenes || []).map((g) => `"${g}"`).join(",\n    ")}]
+
+proteomics.plotting.volcano(table, [
+    (set(table.index), {"color": "gray", "alpha": 0.1, "label": "_nolegend_"}, None),
+    (set(table[table["significant"]].index), {"color": "darkred", "alpha": 0.1, "label": "significant"}, None),
+    (set(genes), {"color": "tab:blue", "alpha": 0.8, "label": "_nolegend_"}, "gene")
+], ax=ax, interactive=True)
+
+ax.set_xlabel("$\\log_2$ fold change")
+ax.set_ylabel("$-\\log_{10} \\; p_{adjusted}$")
+ax.set_title("${comparisons[1]} vs. ${comparisons[0]}")
+ax.legend()
+plt.tight_layout()
+show()
+    `;
+}
+
+/* async function makeVolcanoPlot({ comparisons, highlightGenes }) {
     if (!comparisons) return { data: [], layout: {} };
     const highlightGeneSet = new Set(
         (highlightGenes || []).map((g) => g.toLowerCase())
@@ -403,9 +548,26 @@ async function makeVolcanoPlot({ comparisons, highlightGenes }) {
             },
         },
     };
+} */
+
+function makePValueHistogram({ comparisons }) {
+    return `
+fig, ax = reset()
+data = await get_from_analysis("data_comparisons")
+table = data[("${comparisons[0]}", "${comparisons[1]}")]
+
+ax.hist(table["p"], bins=40, alpha=0.5, label="$p$-value")
+ax.hist(table["p adjusted"], bins=40, alpha=0.5, label="adjusted $p$-value")
+ax.set_xlabel("$p$")
+ax.set_ylabel("Count")
+ax.set_title("distribution of $p$-values for ${comparisons[1]} vs. ${comparisons[0]}")
+ax.legend()
+plt.tight_layout()
+show()
+    `;
 }
 
-async function makePValueHistogram({ comparisons }) {
+/* async function makePValueHistogram({ comparisons }) {
     if (!comparisons) return { data: [], layout: {} };
     return {
         data: [
@@ -446,4 +608,4 @@ async function makePValueHistogram({ comparisons }) {
             },
         },
     };
-}
+} */
