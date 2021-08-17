@@ -7,10 +7,12 @@ import "./SidePanelContainer.css";
 import MUIDataTable from "mui-datatables";
 import ReplOutput from "./ReplOutput";
 import { getComparisonTable } from "../RunAnalysis";
+import { runPython, runPythonWorker } from "../PyAnalysis";
 
 function SidePanelContainer({ id, samples, figureOptions, replLog }) {
     const [tab, setTab] = React.useState("table");
     const [data, setData] = React.useState();
+    const [code, setCode] = React.useState("");
 
     React.useEffect(async () => {
         if (figureOptions.comparisons) {
@@ -54,12 +56,23 @@ function SidePanelContainer({ id, samples, figureOptions, replLog }) {
                         ))}
                     </div>
                     <div className="repl-input">
-                        <textarea className="repl-inputbox" rows={5}></textarea>
+                        <textarea
+                            className="repl-inputbox"
+                            rows={5}
+                            value={code}
+                            onChange={(e) => setCode(e.target.value)}
+                        ></textarea>
                         <div className="repl-inputrun">
-                            <button className="repl-runworker">
+                            <button
+                                className="repl-runworker"
+                                onClick={() => runPythonWorker(code)}
+                            >
                                 run in worker
                             </button>
-                            <button className="repl-runfigure">
+                            <button
+                                className="repl-runfigure"
+                                onClick={() => runPython(code)}
+                            >
                                 run in figure
                             </button>
                         </div>
