@@ -5,7 +5,7 @@ function InputDataUpload({ onDataUpload }) {
     return (
         <div>
             <label htmlFor="dataUpload">
-                (1) Upload data to begin analysis:{" "}
+                (1) Select data to begin analysis:{" "}
             </label>
             <input
                 type="file"

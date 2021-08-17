@@ -12,6 +12,7 @@ const initialState = {
     },
     side: {},
     main: {},
+    repl: [],
 };
 
 function inputReducer(state, action) {
@@ -42,6 +43,21 @@ function viewReducer(state, action) {
     return state;
 }
 
+function replReducer(state, action) {
+    switch (action.type) {
+        case ACTIONS.APPEND_REPL_LOG:
+            let index = state.length;
+            return [
+                ...state,
+                {
+                    index,
+                    ...action.data,
+                },
+            ];
+    }
+    return state;
+}
+
 function rootReducer(state = initialState, action) {
     const cpy = { ...state };
     switch (action.type) {
@@ -52,6 +68,9 @@ function rootReducer(state = initialState, action) {
             break;
         case ACTIONS.SET_VIEW_FIGURE_OPTIONS:
             cpy.view = viewReducer(state.view, action);
+            break;
+        case ACTIONS.APPEND_REPL_LOG:
+            cpy.repl = replReducer(state.repl, action);
             break;
     }
     return cpy;

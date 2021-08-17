@@ -1,14 +1,14 @@
 import React from "react";
 import { connect } from "react-redux";
 import { FIGURES } from "../Figures";
-import { downloadData, saveFigure } from "../RunAnalysis";
+import { showPlot } from "../RunAnalysis";
 import { ACTIONS, createAction } from "../store/actions";
 
 import FigureOptions from "./FigureOptions";
 
 import "./ViewContainer.css";
 
-function ViewContainer({ id, onOptionsSet, onDownloadClick, onSavePlotClick }) {
+function ViewContainer({ id, onOptionsSet }) {
     const [figureOptions, setFigureOptions] = React.useState({});
 
     return (
@@ -52,9 +52,6 @@ function ViewContainer({ id, onOptionsSet, onDownloadClick, onSavePlotClick }) {
                 <button onClick={() => onOptionsSet(figureOptions)}>
                     View data
                 </button>
-
-                <button onClick={onDownloadClick}>Download data</button>
-                <button onClick={onSavePlotClick}>Download figure</button>
             </div>
         </div>
     );
@@ -63,15 +60,10 @@ function ViewContainer({ id, onOptionsSet, onDownloadClick, onSavePlotClick }) {
 export default connect(null, (dispatch) => {
     return {
         onOptionsSet: (figureOptions) => {
+            dispatch(showPlot(figureOptions));
             dispatch(
                 createAction(ACTIONS.SET_VIEW_FIGURE_OPTIONS, figureOptions)
             );
-        },
-        onDownloadClick: () => {
-            dispatch(downloadData());
-        },
-        onSavePlotClick: () => {
-            dispatch(saveFigure());
         },
     };
 })(ViewContainer);

@@ -1,0 +1,24 @@
+.repl-block {
+    margin: 0.5rem;
+    border: 1px solid #607496;
+    font-size: 80%;
+}
+
+.repl-block > * {
+    padding: 0.5rem;
+}
+
+.repl-code {
+    background-color: #f6f6f6;
+}
+
+.repl-error {
+    color: red;
+}
+
+.repl-code,
+.repl-results,
+.repl-error {
+    overflow-x: auto;
+    margin: 0;
+}
