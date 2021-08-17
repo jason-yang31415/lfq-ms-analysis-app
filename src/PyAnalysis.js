@@ -29,7 +29,7 @@ function initializePython() {
             return py().runPythonAsync(`
 import micropip
 
-await micropip.install("/python/proteomics_analysis-0.0.1-py3-none-any.whl")
+await micropip.install("/lfq-ms-analysis-app/python/proteomics_analysis-0.0.1-py3-none-any.whl")
 import proteomics
 import proteomics.plotting
 lfq_col = proteomics.util.lfq_col
