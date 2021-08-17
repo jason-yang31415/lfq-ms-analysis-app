@@ -164,7 +164,7 @@ export function showPlot(figureOptions) {
 export function getComparisonTable(comparison) {
     // convert dataframe to list of dicts
     return runPythonWorker(`
-table = data_comparisons[("${comparison[0]}", "${comparison[1]}")].to_dict("records")
+table = data_comparisons[("${comparison[0]}", "${comparison[1]}")].fillna("").assign(significant=lambda df: df["significant"].apply(str)).to_dict("records")
         `)
         .then(() => {
             // retrieve comparison data from worker python instance
