@@ -30,7 +30,7 @@ function SidePanelContainer({ id, samples, figureOptions, replLog }) {
                     title={
                         figureOptions.comparisons
                             ? `${figureOptions.comparisons[1]} vs. ${figureOptions.comparisons[0]}`
-                            : "no data: make and select a comparison"
+                            : ""
                     }
                     data={data}
                     columns={data ? Object.keys(data[0]) : []}

@@ -4,7 +4,8 @@
 }
 
 .sidepanel-top {
-    flex: 1 1 auto;
+    flex: 1 1 0;
+    overflow: hidden;
 }
 
 .sidepanel-bottom {
@@ -57,4 +58,14 @@
 
 .repl-inputrun > * {
     flex-grow: 1;
+}
+
+.sidepanel-top > .MuiPaper-root {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.sidepanel-top > .MuiPaper-root > .MUIDataTable-responsiveBase-5 {
+    flex: 1 1 0;
 }
