@@ -2,7 +2,7 @@ import micropip
 import sys, io, pickle
 
 await micropip.install(
-    "/lfq-ms-analysis-app/python/proteomics_analysis-0.0.1-py3-none-any.whl"
+    "/lfq-ms-analysis-app/python/proteomics_analysis-0.0.2-py3-none-any.whl"
 )
 
 sys.setrecursionlimit(2000)
