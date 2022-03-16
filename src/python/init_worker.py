@@ -1,7 +1,7 @@
 import micropip
 import sys, io, pickle
 
-await micropip.install("/python/proteomics_analysis-0.0.1-py3-none-any.whl")
+await micropip.install("/python/proteomics_analysis-0.0.2-py3-none-any.whl")
 
 sys.setrecursionlimit(2000)
 namespace = {}  # use separate namespace to hide run_code, modules, etc.
